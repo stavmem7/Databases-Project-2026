@@ -1,3 +1,3 @@
-"AMKA","onoma","eponymo","eidikotita","vathmida","eixe_efimeria","plithos_epemvaseon"
-"00000000017","Φωτεινή","Χριστοδούλου","Καρδιολογία","EIDIKEUOMENOS","ΟΧΙ","2"
-"00000000004","Κατερίνα","Τσακίρης","Καρδιολογία","EIDIKEUOMENOS","ΟΧΙ","1"
+"ssn","name","surname","specialty","rank","had_shift","total_procedures"
+"00000000017","Φωτεινή","Χριστοδούλου","Καρδιολογία","RESIDENT","NO","2"
+"00000000004","Κατερίνα","Τσακίρης","Καρδιολογία","RESIDENT","NO","1"

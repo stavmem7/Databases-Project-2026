@@ -6,7 +6,7 @@ START TRANSACTION;
 SET time_zone = "+00:00";
 SET NAMES utf8mb4;
 
-USE ugeiopolis;
+USE ygeiopolis;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- phpMyAdmin SQL Dump
@@ -14,7 +14,6 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 03, 2026 at 04:24 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -29,18 +28,18 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: ugeiopolis
+-- Database: ygeiopolis
 --
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table allergia
+-- Table structure for table allergy
 --
 
-CREATE TABLE allergia (
-  AMKA_astheni char(11) NOT NULL,
-  ousia_id int(11) NOT NULL
+CREATE TABLE allergy (
+  patient_ssn char(11) NOT NULL,
+  substance_id int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -50,24 +49,24 @@ CREATE TABLE allergia (
 -- --------------------------------------------------------
 
 --
--- Table structure for table asthenis
+-- Table structure for table patient
 --
 
-CREATE TABLE asthenis (
-  AMKA char(11) NOT NULL,
-  onoma varchar(50) NOT NULL,
-  eponymo varchar(50) NOT NULL,
-  patronymo varchar(50) NOT NULL,
-  ilikia tinyint(3) UNSIGNED NOT NULL,
-  fylo enum('ANDRAS','GYNAIKA','ALLO') NOT NULL,
-  varos decimal(5,2) DEFAULT NULL CHECK (varos > 0),
-  ypsos decimal(4,2) DEFAULT NULL CHECK (ypsos > 0),
-  dieuthinsi varchar(200) DEFAULT NULL,
-  tilefono varchar(15) DEFAULT NULL,
+CREATE TABLE patient (
+  ssn char(11) NOT NULL,
+  name varchar(50) NOT NULL,
+  surname varchar(50) NOT NULL,
+  father_name varchar(50) NOT NULL,
+  age tinyint(3) UNSIGNED NOT NULL,
+  gender enum('MALE','FEMALE','OTHER') NOT NULL,
+  weight decimal(5,2) DEFAULT NULL CHECK (weight > 0),
+  height decimal(4,2) DEFAULT NULL CHECK (height > 0),
+  address varchar(200) DEFAULT NULL,
+  phone varchar(15) DEFAULT NULL,
   email varchar(100) DEFAULT NULL,
-  epaggelma varchar(100) DEFAULT NULL,
-  ypikootita varchar(50) DEFAULT NULL,
-  asfalistikos_foreas varchar(100) NOT NULL
+  occupation varchar(100) DEFAULT NULL,
+  nationality varchar(50) DEFAULT NULL,
+  insurance_provider varchar(100) NOT NULL
 ) ;
 
 --
@@ -77,14 +76,14 @@ CREATE TABLE asthenis (
 -- --------------------------------------------------------
 
 --
--- Table structure for table axiologisi_iatrou
+-- Table structure for table doctor_review
 --
 
-CREATE TABLE axiologisi_iatrou (
-  axiologisi_id int(11) NOT NULL,
-  nosileia_id int(11) NOT NULL,
-  AMKA_iatrou char(11) NOT NULL,
-  poiotita_iatrикis_frontidas tinyint(4) NOT NULL CHECK (poiotita_iatrикis_frontidas between 1 and 5)
+CREATE TABLE doctor_review (
+  review_id int(11) NOT NULL,
+  hospitalization_id int(11) NOT NULL,
+  doctor_ssn char(11) NOT NULL,
+  medical_care_quality tinyint(4) NOT NULL CHECK (medical_care_quality between 1 and 5)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -94,16 +93,16 @@ CREATE TABLE axiologisi_iatrou (
 -- --------------------------------------------------------
 
 --
--- Table structure for table axiologisi_nosilias
+-- Table structure for table hospitalization_review
 --
 
-CREATE TABLE axiologisi_nosilias (
-  axiologisi_id int(11) NOT NULL,
-  nosileia_id int(11) NOT NULL,
-  poiotita_nosileytikis_frontidas tinyint(4) NOT NULL CHECK (poiotita_nosileytikis_frontidas between 1 and 5),
-  kathariotita tinyint(4) NOT NULL CHECK (kathariotita between 1 and 5),
-  fagito tinyint(4) NOT NULL CHECK (fagito between 1 and 5),
-  synoliki_empeiria tinyint(4) NOT NULL CHECK (synoliki_empeiria between 1 and 5)
+CREATE TABLE hospitalization_review (
+  review_id int(11) NOT NULL,
+  hospitalization_id int(11) NOT NULL,
+  nursing_care_quality tinyint(4) NOT NULL CHECK (nursing_care_quality between 1 and 5),
+  cleanliness tinyint(4) NOT NULL CHECK (cleanliness between 1 and 5),
+  food tinyint(4) NOT NULL CHECK (food between 1 and 5),
+  overall_experience tinyint(4) NOT NULL CHECK (overall_experience between 1 and 5)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -113,19 +112,19 @@ CREATE TABLE axiologisi_nosilias (
 -- --------------------------------------------------------
 
 --
--- Table structure for table dialogi
+-- Table structure for table triage
 --
 
-CREATE TABLE dialogi (
-  dialogi_id int(11) NOT NULL,
-  AMKA_astheni char(11) NOT NULL,
-  AMKA_nosileutis char(11) NOT NULL,
-  nosileia_id int(11) DEFAULT NULL,
-  wra_afiksis datetime NOT NULL,
-  wra_exiperetisis datetime DEFAULT NULL,
-  symptomata text DEFAULT NULL,
-  epipedo_epeigotos tinyint(4) NOT NULL CHECK (epipedo_epeigotos between 1 and 5),
-  apotelesma enum('APOXWRISE','PAREPEMPTHIKE') NOT NULL
+CREATE TABLE triage (
+  triage_id int(11) NOT NULL,
+  patient_ssn char(11) NOT NULL,
+  nurse_ssn char(11) NOT NULL,
+  hospitalization_id int(11) DEFAULT NULL,
+  arrival_time datetime NOT NULL,
+  service_time datetime DEFAULT NULL,
+  symptoms text DEFAULT NULL,
+  urgency_level tinyint(4) NOT NULL CHECK (urgency_level between 1 and 5),
+  outcome enum('DISCHARGED','ADMITTED') NOT NULL
 ) ;
 
 --
@@ -135,15 +134,15 @@ CREATE TABLE dialogi (
 -- --------------------------------------------------------
 
 --
--- Table structure for table dioikitiko_proswpiko
+-- Table structure for table administrative_staff
 --
 
-CREATE TABLE dioikitiko_proswpiko (
-  AMKA char(11) NOT NULL,
-  AMKA_proswpikou char(11) NOT NULL,
-  tmima_id int(11) NOT NULL,
-  rolos varchar(50) NOT NULL,
-  grafeio varchar(50) NOT NULL
+CREATE TABLE administrative_staff (
+  ssn char(11) NOT NULL,
+  staff_ssn char(11) NOT NULL,
+  department_id int(11) NOT NULL,
+  role varchar(50) NOT NULL,
+  office varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -153,12 +152,12 @@ CREATE TABLE dioikitiko_proswpiko (
 -- --------------------------------------------------------
 
 --
--- Table structure for table drastiki_ousia
+-- Table structure for table active_substance
 --
 
-CREATE TABLE drastiki_ousia (
-  ousia_id int(11) NOT NULL,
-  onoma varchar(200) NOT NULL
+CREATE TABLE active_substance (
+  substance_id int(11) NOT NULL,
+  name varchar(200) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -168,50 +167,34 @@ CREATE TABLE drastiki_ousia (
 -- --------------------------------------------------------
 
 --
--- Table structure for table eikona
+-- Table structure for table image
 --
 
-CREATE TABLE eikona (
-  eikona_id int(11) NOT NULL,
+CREATE TABLE image (
+  image_id int(11) NOT NULL,
   entity_type varchar(50) NOT NULL,
   entity_id int(11) NOT NULL,
   url varchar(500) NOT NULL,
-  perigrafh text DEFAULT NULL
+  description text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table ergastiiriaki_exetasi
+-- Table structure for table lab_test
 --
 
-CREATE TABLE ergastiiriaki_exetasi (
-  exetasi_id int(11) NOT NULL,
-  nosileia_id int(11) NOT NULL,
-  AMKA_iatrou char(11) NOT NULL,
-  kwdikos varchar(20) NOT NULL,
-  typos varchar(100) NOT NULL,
-  imerominia date NOT NULL,
-  apotelesma_keimeno text DEFAULT NULL,
-  apotelesma_arithmitiko decimal(10,4) DEFAULT NULL,
-  monada_metrisis varchar(30) DEFAULT NULL,
-  kostos decimal(8,2) NOT NULL CHECK (kostos >= 0)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
---
-
-
--- --------------------------------------------------------
-
---
--- Table structure for table farmako
---
-
-CREATE TABLE farmako (
-  farmako_id int(11) NOT NULL,
-  onoma varchar(200) NOT NULL,
-  kwdikos_EMA varchar(50) NOT NULL
+CREATE TABLE lab_test (
+  test_id int(11) NOT NULL,
+  hospitalization_id int(11) NOT NULL,
+  doctor_ssn char(11) NOT NULL,
+  code varchar(20) NOT NULL,
+  type varchar(100) NOT NULL,
+  date date NOT NULL,
+  result_text text DEFAULT NULL,
+  result_numeric decimal(10,4) DEFAULT NULL,
+  unit varchar(30) DEFAULT NULL,
+  cost decimal(8,2) NOT NULL CHECK (cost >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -221,12 +204,13 @@ CREATE TABLE farmako (
 -- --------------------------------------------------------
 
 --
--- Table structure for table farmako_ousia
+-- Table structure for table medication
 --
 
-CREATE TABLE farmako_ousia (
-  farmako_id int(11) NOT NULL,
-  ousia_id int(11) NOT NULL
+CREATE TABLE medication (
+  medication_id int(11) NOT NULL,
+  name varchar(200) NOT NULL,
+  ema_code varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -236,20 +220,12 @@ CREATE TABLE farmako_ousia (
 -- --------------------------------------------------------
 
 --
--- Table structure for table iatriki_praxi
+-- Table structure for table medication_substance
 --
 
-CREATE TABLE iatriki_praxi (
-  praxi_id int(11) NOT NULL,
-  nosileia_id int(11) NOT NULL,
-  xwros_id int(11) NOT NULL,
-  AMKA_kyriou_xeirourgou char(11) NOT NULL,
-  kwdikos varchar(20) NOT NULL,
-  onoma varchar(200) NOT NULL,
-  katigoria enum('XEIROURGIKI','DIAGNOASTIKI','THERAPEUTIKI') NOT NULL,
-  diarkeia_lepta int(11) NOT NULL CHECK (diarkeia_lepta > 0),
-  kostos decimal(10,2) NOT NULL CHECK (kostos >= 0),
-  im_wra_enarxis datetime NOT NULL
+CREATE TABLE medication_substance (
+  medication_id int(11) NOT NULL,
+  substance_id int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -259,16 +235,39 @@ CREATE TABLE iatriki_praxi (
 -- --------------------------------------------------------
 
 --
--- Table structure for table iatros
+-- Table structure for table medical_procedure
 --
 
-CREATE TABLE iatros (
-  AMKA char(11) NOT NULL,
-  AMKA_proswpikou char(11) NOT NULL,
-  AMKA_epopti char(11) DEFAULT NULL,
-  ar_adeias_iatrikou_sullogou varchar(20) NOT NULL,
-  eidikotita varchar(50) NOT NULL,
-  vathmida enum('EIDIKEUOMENOS','EPIMELETIS_B','EPIMELETIS_A','DIEUTHETIS') NOT NULL
+CREATE TABLE medical_procedure (
+  procedure_id int(11) NOT NULL,
+  hospitalization_id int(11) NOT NULL,
+  room_id int(11) NOT NULL,
+  chief_surgeon_ssn char(11) NOT NULL,
+  code varchar(20) NOT NULL,
+  name varchar(200) NOT NULL,
+  category enum('SURGICAL','DIAGNOSTIC','THERAPEUTIC') NOT NULL,
+  duration_minutes int(11) NOT NULL CHECK (duration_minutes > 0),
+  cost decimal(10,2) NOT NULL CHECK (cost >= 0),
+  start_datetime datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+--
+
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table doctor
+--
+
+CREATE TABLE doctor (
+  ssn char(11) NOT NULL,
+  staff_ssn char(11) NOT NULL,
+  supervisor_ssn char(11) DEFAULT NULL,
+  medical_license_no varchar(20) NOT NULL,
+  specialty varchar(50) NOT NULL,
+  rank enum('RESIDENT','JUNIOR_CONSULTANT','SENIOR_CONSULTANT','DIRECTOR') NOT NULL
 ) ;
 
 --
@@ -276,19 +275,19 @@ CREATE TABLE iatros (
 
 
 --
--- Triggers iatros
+-- Triggers doctor
 --
 DELIMITER $$
-CREATE TRIGGER `trg_no_circular_supervision` BEFORE INSERT ON `iatros` FOR EACH ROW BEGIN
+CREATE TRIGGER `trg_no_circular_supervision` BEFORE INSERT ON `doctor` FOR EACH ROW BEGIN
     DECLARE epoptis_id CHAR(11);
     DECLARE depth INT DEFAULT 0;
-    SET epoptis_id = NEW.AMKA_epopti;
+    SET epoptis_id = NEW.supervisor_ssn;
     WHILE epoptis_id IS NOT NULL AND depth < 100 DO
-        IF epoptis_id = NEW.AMKA THEN
+        IF epoptis_id = NEW.ssn THEN
             SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'Κυκλική αλυσίδα εποπτείας δεν επιτρέπεται';
         END IF;
-        SELECT AMKA_epopti INTO epoptis_id FROM Iatros WHERE AMKA = epoptis_id;
+        SELECT supervisor_ssn INTO epoptis_id FROM doctor WHERE ssn = epoptis_id;
         SET depth = depth + 1;
     END WHILE;
 END
@@ -298,12 +297,12 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Table structure for table iatros_tmima
+-- Table structure for table doctor_department
 --
 
-CREATE TABLE iatros_tmima (
-  AMKA_iatrou char(11) NOT NULL,
-  tmima_id int(11) NOT NULL
+CREATE TABLE doctor_department (
+  doctor_ssn char(11) NOT NULL,
+  department_id int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -317,8 +316,8 @@ CREATE TABLE iatros_tmima (
 --
 
 CREATE TABLE icd10 (
-  kwdikos varchar(10) NOT NULL,
-  perigrafh varchar(500) NOT NULL
+  code varchar(10) NOT NULL,
+  description varchar(500) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -332,11 +331,11 @@ CREATE TABLE icd10 (
 --
 
 CREATE TABLE ken (
-  kwdikos_KEN varchar(20) NOT NULL,
-  perigrafh text DEFAULT NULL,
-  vasiko_kostos decimal(10,2) NOT NULL CHECK (vasiko_kostos >= 0),
-  MDN decimal(5,2) NOT NULL CHECK (MDN > 0),
-  imerisia_xrewsi_ypervasis decimal(8,2) NOT NULL CHECK (imerisia_xrewsi_ypervasis >= 0)
+  ken_code varchar(20) NOT NULL,
+  description text DEFAULT NULL,
+  base_cost decimal(10,2) NOT NULL CHECK (base_cost >= 0),
+  avg_stay_days decimal(5,2) NOT NULL CHECK (avg_stay_days > 0),
+  daily_excess_charge decimal(8,2) NOT NULL CHECK (daily_excess_charge >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -346,15 +345,15 @@ CREATE TABLE ken (
 -- --------------------------------------------------------
 
 --
--- Table structure for table klini
+-- Table structure for table bed
 --
 
-CREATE TABLE klini (
-  klini_id int(11) NOT NULL,
-  tmima_id int(11) NOT NULL,
-  monadikos_arithmos varchar(20) NOT NULL,
-  typos enum('MEΘ','MONOKLINΟ','POLYKLINΟ','ALLOS') NOT NULL,
-  katastasi enum('DIATHESIMI','KATEILIMMENI','YPO_SINTHIRIXI') NOT NULL DEFAULT 'DIATHESIMI'
+CREATE TABLE bed (
+  bed_id int(11) NOT NULL,
+  department_id int(11) NOT NULL,
+  unique_number varchar(20) NOT NULL,
+  type enum('ICU','SINGLE','MULTI','OTHER') NOT NULL,
+  status enum('AVAILABLE','OCCUPIED','MAINTENANCE') NOT NULL DEFAULT 'AVAILABLE'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -364,22 +363,22 @@ CREATE TABLE klini (
 -- --------------------------------------------------------
 
 --
--- Table structure for table nosileia
+-- Table structure for table hospitalization
 --
 
-CREATE TABLE nosileia (
-  nosileia_id int(11) NOT NULL,
-  AMKA_astheni char(11) NOT NULL,
-  klini_id int(11) NOT NULL,
-  tmima_id int(11) NOT NULL,
-  kwdikos_KEN varchar(20) NOT NULL,
-  im_eisagogis date NOT NULL,
-  im_exodou date DEFAULT NULL,
-  diagnosi_eisagogis_kwdikos varchar(10) NOT NULL,
-  diagnosi_eisagogis_perigrafh text DEFAULT NULL,
-  diagnosi_exodou_kwdikos varchar(10) DEFAULT NULL,
-  diagnosi_exodou_perigrafh text DEFAULT NULL,
-  synoliko_kostos decimal(10,2) DEFAULT NULL CHECK (synoliko_kostos >= 0)
+CREATE TABLE hospitalization (
+  hospitalization_id int(11) NOT NULL,
+  patient_ssn char(11) NOT NULL,
+  bed_id int(11) NOT NULL,
+  department_id int(11) NOT NULL,
+  ken_code varchar(20) NOT NULL,
+  admission_date date NOT NULL,
+  discharge_date date DEFAULT NULL,
+  admission_diagnosis_code varchar(10) NOT NULL,
+  admission_diagnosis_desc text DEFAULT NULL,
+  discharge_diagnosis_code varchar(10) DEFAULT NULL,
+  discharge_diagnosis_desc text DEFAULT NULL,
+  total_cost decimal(10,2) DEFAULT NULL CHECK (total_cost >= 0)
 ) ;
 
 --
@@ -389,14 +388,14 @@ CREATE TABLE nosileia (
 -- --------------------------------------------------------
 
 --
--- Table structure for table nosileutis
+-- Table structure for table nurse
 --
 
-CREATE TABLE nosileutis (
-  AMKA char(11) NOT NULL,
-  AMKA_proswpikou char(11) NOT NULL,
-  tmima_id int(11) NOT NULL,
-  vathmida enum('VOITHOS_NOSILEUTIS','NOSILEUTIS','PROISTAMENOS') NOT NULL
+CREATE TABLE nurse (
+  ssn char(11) NOT NULL,
+  staff_ssn char(11) NOT NULL,
+  department_id int(11) NOT NULL,
+  rank enum('NURSE_ASSISTANT','NURSE','HEAD_NURSE') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -406,15 +405,15 @@ CREATE TABLE nosileutis (
 -- --------------------------------------------------------
 
 --
--- Table structure for table oikeios
+-- Table structure for table emergency_contact
 --
 
-CREATE TABLE oikeios (
-  oikeios_id int(11) NOT NULL,
-  AMKA_astheni char(11) NOT NULL,
-  onoma varchar(100) NOT NULL,
-  tilefono varchar(15) NOT NULL,
-  schesi varchar(50) NOT NULL
+CREATE TABLE emergency_contact (
+  emergency_contact_id int(11) NOT NULL,
+  patient_ssn char(11) NOT NULL,
+  name varchar(100) NOT NULL,
+  phone varchar(15) NOT NULL,
+  relationship varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -424,18 +423,18 @@ CREATE TABLE oikeios (
 -- --------------------------------------------------------
 
 --
--- Table structure for table proswpiko
+-- Table structure for table staff
 --
 
-CREATE TABLE proswpiko (
-  AMKA char(11) NOT NULL,
-  onoma varchar(50) NOT NULL,
-  eponymo varchar(50) NOT NULL,
-  ilikia tinyint(3) UNSIGNED NOT NULL CHECK (ilikia >= 18 and ilikia <= 80),
+CREATE TABLE staff (
+  ssn char(11) NOT NULL,
+  name varchar(50) NOT NULL,
+  surname varchar(50) NOT NULL,
+  age tinyint(3) UNSIGNED NOT NULL CHECK (age >= 18 and age <= 80),
   email varchar(100) NOT NULL,
-  tilefono varchar(15) NOT NULL,
-  im_proslipsis date NOT NULL,
-  typos enum('IATROS','NOSILEUTIS','DIOIKITIKO') NOT NULL
+  phone varchar(15) NOT NULL,
+  hire_date date NOT NULL,
+  type enum('DOCTOR','NURSE','ADMINISTRATIVE') NOT NULL
 ) ;
 
 --
@@ -445,13 +444,13 @@ CREATE TABLE proswpiko (
 -- --------------------------------------------------------
 
 --
--- Table structure for table symmetoxi_vardias
+-- Table structure for table shift_participation
 --
 
-CREATE TABLE symmetoxi_vardias (
-  vardia_id int(11) NOT NULL,
-  AMKA_proswpikou char(11) NOT NULL,
-  rolos_vardias varchar(50) DEFAULT NULL
+CREATE TABLE shift_participation (
+  shift_id int(11) NOT NULL,
+  staff_ssn char(11) NOT NULL,
+  role_shifts varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -461,19 +460,19 @@ CREATE TABLE symmetoxi_vardias (
 -- --------------------------------------------------------
 
 --
--- Table structure for table syntagografisi
+-- Table structure for table prescription
 --
 
-CREATE TABLE syntagografisi (
-  syntagografisi_id int(11) NOT NULL,
-  AMKA_iatrou char(11) NOT NULL,
-  AMKA_astheni char(11) NOT NULL,
-  farmako_id int(11) NOT NULL,
-  nosileia_id int(11) NOT NULL,
-  dosologia varchar(200) NOT NULL,
-  syxnotita varchar(100) NOT NULL,
-  im_enarxis date NOT NULL,
-  im_lixis date DEFAULT NULL
+CREATE TABLE prescription (
+  prescription_id int(11) NOT NULL,
+  doctor_ssn char(11) NOT NULL,
+  patient_ssn char(11) NOT NULL,
+  medication_id int(11) NOT NULL,
+  hospitalization_id int(11) NOT NULL,
+  dosage varchar(200) NOT NULL,
+  frequency varchar(100) NOT NULL,
+  start_date date NOT NULL,
+  end_date date DEFAULT NULL
 ) ;
 
 --
@@ -483,16 +482,16 @@ CREATE TABLE syntagografisi (
 -- --------------------------------------------------------
 
 --
--- Table structure for table tmima
+-- Table structure for table department
 --
 
-CREATE TABLE tmima (
-  tmima_id int(11) NOT NULL,
-  AMKA_dieutinti char(11) DEFAULT NULL,
-  onoma varchar(100) NOT NULL,
-  perigrafh text DEFAULT NULL,
-  ar_klinwn smallint(5) UNSIGNED NOT NULL DEFAULT 0,
-  oros_ktiriο varchar(50) NOT NULL
+CREATE TABLE department (
+  department_id int(11) NOT NULL,
+  director_ssn char(11) DEFAULT NULL,
+  name varchar(100) NOT NULL,
+  description text DEFAULT NULL,
+  bed_count smallint(5) UNSIGNED NOT NULL DEFAULT 0,
+  floor_building varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -502,16 +501,16 @@ CREATE TABLE tmima (
 -- --------------------------------------------------------
 
 --
--- Table structure for table vardia
+-- Table structure for table shift
 --
 
-CREATE TABLE vardia (
-  vardia_id int(11) NOT NULL,
-  tmima_id int(11) NOT NULL,
-  imerominia date NOT NULL,
-  typos enum('PRWINI','APOGEUMATINI','NYXTERINI') NOT NULL,
-  wra_enarxis time NOT NULL,
-  wra_lixis time NOT NULL
+CREATE TABLE shift (
+  shift_id int(11) NOT NULL,
+  department_id int(11) NOT NULL,
+  date date NOT NULL,
+  type enum('MORNING','AFTERNOON','NIGHT') NOT NULL,
+  start_time time NOT NULL,
+  end_time time NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -521,12 +520,12 @@ CREATE TABLE vardia (
 -- --------------------------------------------------------
 
 --
--- Table structure for table voithos_praxis
+-- Table structure for table procedure_assistant
 --
 
-CREATE TABLE voithos_praxis (
-  praxi_id int(11) NOT NULL,
-  AMKA_voithou char(11) NOT NULL
+CREATE TABLE procedure_assistant (
+  procedure_id int(11) NOT NULL,
+  assistant_ssn char(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -536,13 +535,13 @@ CREATE TABLE voithos_praxis (
 -- --------------------------------------------------------
 
 --
--- Table structure for table xwros_epemvasis
+-- Table structure for table procedure_room
 --
 
-CREATE TABLE xwros_epemvasis (
-  xwros_id int(11) NOT NULL,
-  onoma varchar(100) NOT NULL,
-  typos enum('XEIROURGEIΟ','AΙTHOUSA_EPEMVASIS') NOT NULL
+CREATE TABLE procedure_room (
+  room_id int(11) NOT NULL,
+  name varchar(100) NOT NULL,
+  type enum('XEIROURGEIΟ','AΙTHOUSA_EPEMVASIS') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -554,438 +553,438 @@ CREATE TABLE xwros_epemvasis (
 --
 
 --
--- Indexes for table allergia
+-- Indexes for table allergy
 --
-ALTER TABLE allergia
-  ADD PRIMARY KEY (AMKA_astheni,ousia_id),
-  ADD KEY fk_all_ousia (ousia_id);
+ALTER TABLE allergy
+  ADD PRIMARY KEY (patient_ssn,substance_id),
+  ADD KEY fk_all_ousia (substance_id);
 
 --
--- Indexes for table asthenis
+-- Indexes for table patient
 --
-ALTER TABLE asthenis
-  ADD PRIMARY KEY (AMKA);
+ALTER TABLE patient
+  ADD PRIMARY KEY (ssn);
 
 --
--- Indexes for table axiologisi_iatrou
+-- Indexes for table doctor_review
 --
-ALTER TABLE axiologisi_iatrou
-  ADD PRIMARY KEY (axiologisi_id),
-  ADD UNIQUE KEY uq_axiolog_iat (nosileia_id,AMKA_iatrou),
-  ADD KEY fk_axi_iatros (AMKA_iatrou);
+ALTER TABLE doctor_review
+  ADD PRIMARY KEY (review_id),
+  ADD UNIQUE KEY uq_axiolog_iat (hospitalization_id,doctor_ssn),
+  ADD KEY fk_axi_doctor (doctor_ssn);
 
 --
--- Indexes for table axiologisi_nosilias
+-- Indexes for table hospitalization_review
 --
-ALTER TABLE axiologisi_nosilias
-  ADD PRIMARY KEY (axiologisi_id),
-  ADD UNIQUE KEY nosileia_id (nosileia_id);
+ALTER TABLE hospitalization_review
+  ADD PRIMARY KEY (review_id),
+  ADD UNIQUE KEY hospitalization_id (hospitalization_id);
 
 --
--- Indexes for table dialogi
+-- Indexes for table triage
 --
-ALTER TABLE dialogi
-  ADD PRIMARY KEY (dialogi_id),
-  ADD KEY fk_dial_asthenis (AMKA_astheni),
-  ADD KEY fk_dial_nosileutis (AMKA_nosileutis),
-  ADD KEY fk_dial_nosileia (nosileia_id);
+ALTER TABLE triage
+  ADD PRIMARY KEY (triage_id),
+  ADD KEY fk_dial_patient (patient_ssn),
+  ADD KEY fk_dial_nurse (nurse_ssn),
+  ADD KEY fk_dial_hospitalization (hospitalization_id);
 
 --
--- Indexes for table dioikitiko_proswpiko
+-- Indexes for table administrative_staff
 --
-ALTER TABLE dioikitiko_proswpiko
-  ADD PRIMARY KEY (AMKA),
-  ADD KEY fk_dioikitiko_proswpiko (AMKA_proswpikou),
-  ADD KEY fk_dioikitiko_tmima (tmima_id);
+ALTER TABLE administrative_staff
+  ADD PRIMARY KEY (ssn),
+  ADD KEY fk_administrative_staff (staff_ssn),
+  ADD KEY fk_dioikitiko_department (department_id);
 
 --
--- Indexes for table drastiki_ousia
+-- Indexes for table active_substance
 --
-ALTER TABLE drastiki_ousia
-  ADD PRIMARY KEY (ousia_id),
-  ADD UNIQUE KEY onoma (onoma);
+ALTER TABLE active_substance
+  ADD PRIMARY KEY (substance_id),
+  ADD UNIQUE KEY name (name);
 
 --
--- Indexes for table eikona
+-- Indexes for table image
 --
-ALTER TABLE eikona
-  ADD PRIMARY KEY (eikona_id);
+ALTER TABLE image
+  ADD PRIMARY KEY (image_id);
 
 --
--- Indexes for table ergastiiriaki_exetasi
+-- Indexes for table lab_test
 --
-ALTER TABLE ergastiiriaki_exetasi
-  ADD PRIMARY KEY (exetasi_id),
-  ADD KEY fk_ex_nosileia (nosileia_id),
-  ADD KEY fk_ex_iatros (AMKA_iatrou);
+ALTER TABLE lab_test
+  ADD PRIMARY KEY (test_id),
+  ADD KEY fk_ex_hospitalization (hospitalization_id),
+  ADD KEY fk_ex_doctor (doctor_ssn);
 
 --
--- Indexes for table farmako
+-- Indexes for table medication
 --
-ALTER TABLE farmako
-  ADD PRIMARY KEY (farmako_id),
-  ADD UNIQUE KEY kwdikos_EMA (kwdikos_EMA);
+ALTER TABLE medication
+  ADD PRIMARY KEY (medication_id),
+  ADD UNIQUE KEY ema_code (ema_code);
 
 --
--- Indexes for table farmako_ousia
+-- Indexes for table medication_substance
 --
-ALTER TABLE farmako_ousia
-  ADD PRIMARY KEY (farmako_id,ousia_id),
-  ADD KEY fk_fo_ousia (ousia_id);
+ALTER TABLE medication_substance
+  ADD PRIMARY KEY (medication_id,substance_id),
+  ADD KEY fk_fo_ousia (substance_id);
 
 --
--- Indexes for table iatriki_praxi
+-- Indexes for table medical_procedure
 --
-ALTER TABLE iatriki_praxi
-  ADD PRIMARY KEY (praxi_id),
-  ADD KEY fk_praxi_nosileia (nosileia_id),
-  ADD KEY fk_praxi_xwros (xwros_id),
-  ADD KEY fk_praxi_xeirourgos (AMKA_kyriou_xeirourgou);
+ALTER TABLE medical_procedure
+  ADD PRIMARY KEY (procedure_id),
+  ADD KEY fk_praxi_hospitalization (hospitalization_id),
+  ADD KEY fk_praxi_xwros (room_id),
+  ADD KEY fk_praxi_xeirourgos (chief_surgeon_ssn);
 
 --
--- Indexes for table iatros
+-- Indexes for table doctor
 --
-ALTER TABLE iatros
-  ADD PRIMARY KEY (AMKA),
-  ADD UNIQUE KEY ar_adeias_iatrikou_sullogou (ar_adeias_iatrikou_sullogou),
-  ADD KEY fk_iatros_proswpiko (AMKA_proswpikou),
-  ADD KEY fk_iatros_epoptis (AMKA_epopti);
+ALTER TABLE doctor
+  ADD PRIMARY KEY (ssn),
+  ADD UNIQUE KEY medical_license_no (medical_license_no),
+  ADD KEY fk_doctor_staff (staff_ssn),
+  ADD KEY fk_doctor_epoptis (supervisor_ssn);
 
 --
--- Indexes for table iatros_tmima
+-- Indexes for table doctor_department
 --
-ALTER TABLE iatros_tmima
-  ADD PRIMARY KEY (AMKA_iatrou,tmima_id),
-  ADD KEY fk_it_tmima (tmima_id);
+ALTER TABLE doctor_department
+  ADD PRIMARY KEY (doctor_ssn,department_id),
+  ADD KEY fk_it_department (department_id);
 
 --
 -- Indexes for table icd10
 --
 ALTER TABLE icd10
-  ADD PRIMARY KEY (kwdikos);
+  ADD PRIMARY KEY (code);
 
 --
 -- Indexes for table ken
 --
 ALTER TABLE ken
-  ADD PRIMARY KEY (kwdikos_KEN);
+  ADD PRIMARY KEY (ken_code);
 
 --
--- Indexes for table klini
+-- Indexes for table bed
 --
-ALTER TABLE klini
-  ADD PRIMARY KEY (klini_id),
-  ADD UNIQUE KEY uq_klini_tmima (tmima_id,monadikos_arithmos);
+ALTER TABLE bed
+  ADD PRIMARY KEY (bed_id),
+  ADD UNIQUE KEY uq_bed_department (department_id,unique_number);
 
 --
--- Indexes for table nosileia
+-- Indexes for table hospitalization
 --
-ALTER TABLE nosileia
-  ADD PRIMARY KEY (nosileia_id),
-  ADD KEY fk_nos_asthenis (AMKA_astheni),
-  ADD KEY fk_nos_klini (klini_id),
-  ADD KEY fk_nos_tmima (tmima_id),
-  ADD KEY fk_nos_ken (kwdikos_KEN);
+ALTER TABLE hospitalization
+  ADD PRIMARY KEY (hospitalization_id),
+  ADD KEY fk_nos_patient (patient_ssn),
+  ADD KEY fk_nos_bed (bed_id),
+  ADD KEY fk_nos_department (department_id),
+  ADD KEY fk_nos_drg (ken_code);
 
 --
--- Indexes for table nosileutis
+-- Indexes for table nurse
 --
-ALTER TABLE nosileutis
-  ADD PRIMARY KEY (AMKA),
-  ADD KEY fk_nosileutis_proswpiko (AMKA_proswpikou),
-  ADD KEY fk_nosileutis_tmima (tmima_id);
+ALTER TABLE nurse
+  ADD PRIMARY KEY (ssn),
+  ADD KEY fk_nurse_staff (staff_ssn),
+  ADD KEY fk_nurse_department (department_id);
 
 --
--- Indexes for table oikeios
+-- Indexes for table emergency_contact
 --
-ALTER TABLE oikeios
-  ADD PRIMARY KEY (oikeios_id),
-  ADD KEY fk_oikeios_asthenis (AMKA_astheni);
+ALTER TABLE emergency_contact
+  ADD PRIMARY KEY (emergency_contact_id),
+  ADD KEY fk_emergency_contact_patient (patient_ssn);
 
 --
--- Indexes for table proswpiko
+-- Indexes for table staff
 --
-ALTER TABLE proswpiko
-  ADD PRIMARY KEY (AMKA),
+ALTER TABLE staff
+  ADD PRIMARY KEY (ssn),
   ADD UNIQUE KEY email (email);
 
 --
--- Indexes for table symmetoxi_vardias
+-- Indexes for table shift_participation
 --
-ALTER TABLE symmetoxi_vardias
-  ADD PRIMARY KEY (vardia_id,AMKA_proswpikou),
-  ADD KEY fk_sv_proswpiko (AMKA_proswpikou);
+ALTER TABLE shift_participation
+  ADD PRIMARY KEY (shift_id,staff_ssn),
+  ADD KEY fk_sv_staff (staff_ssn);
 
 --
--- Indexes for table syntagografisi
+-- Indexes for table prescription
 --
-ALTER TABLE syntagografisi
-  ADD PRIMARY KEY (syntagografisi_id),
-  ADD UNIQUE KEY uq_syntag (AMKA_iatrou,AMKA_astheni,farmako_id,im_enarxis),
-  ADD KEY fk_syn_asthenis (AMKA_astheni),
-  ADD KEY fk_syn_farmako (farmako_id),
-  ADD KEY fk_syn_nosileia (nosileia_id);
+ALTER TABLE prescription
+  ADD PRIMARY KEY (prescription_id),
+  ADD UNIQUE KEY uq_syntag (doctor_ssn,patient_ssn,medication_id,start_date),
+  ADD KEY fk_syn_patient (patient_ssn),
+  ADD KEY fk_syn_medication (medication_id),
+  ADD KEY fk_syn_hospitalization (hospitalization_id);
 
 --
--- Indexes for table tmima
+-- Indexes for table department
 --
-ALTER TABLE tmima
-  ADD PRIMARY KEY (tmima_id),
-  ADD UNIQUE KEY onoma (onoma),
-  ADD KEY fk_tmima_dieutintis (AMKA_dieutinti);
+ALTER TABLE department
+  ADD PRIMARY KEY (department_id),
+  ADD UNIQUE KEY name (name),
+  ADD KEY fk_department_dieutintis (director_ssn);
 
 --
--- Indexes for table vardia
+-- Indexes for table shift
 --
-ALTER TABLE vardia
-  ADD PRIMARY KEY (vardia_id),
-  ADD UNIQUE KEY uq_vardia (tmima_id,imerominia,typos);
+ALTER TABLE shift
+  ADD PRIMARY KEY (shift_id),
+  ADD UNIQUE KEY uq_shift (department_id,date,type);
 
 --
--- Indexes for table voithos_praxis
+-- Indexes for table procedure_assistant
 --
-ALTER TABLE voithos_praxis
-  ADD PRIMARY KEY (praxi_id,AMKA_voithou),
-  ADD KEY fk_vp_proswpiko (AMKA_voithou);
+ALTER TABLE procedure_assistant
+  ADD PRIMARY KEY (procedure_id,assistant_ssn),
+  ADD KEY fk_vp_staff (assistant_ssn);
 
 --
--- Indexes for table xwros_epemvasis
+-- Indexes for table procedure_room
 --
-ALTER TABLE xwros_epemvasis
-  ADD PRIMARY KEY (xwros_id),
-  ADD UNIQUE KEY onoma (onoma);
+ALTER TABLE procedure_room
+  ADD PRIMARY KEY (room_id),
+  ADD UNIQUE KEY name (name);
 
 --
 -- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT for table axiologisi_iatrou
+-- AUTO_INCREMENT for table doctor_review
 --
-ALTER TABLE axiologisi_iatrou
-  MODIFY axiologisi_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE doctor_review
+  MODIFY review_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table axiologisi_nosilias
+-- AUTO_INCREMENT for table hospitalization_review
 --
-ALTER TABLE axiologisi_nosilias
-  MODIFY axiologisi_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE hospitalization_review
+  MODIFY review_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table dialogi
+-- AUTO_INCREMENT for table triage
 --
-ALTER TABLE dialogi
-  MODIFY dialogi_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE triage
+  MODIFY triage_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table drastiki_ousia
+-- AUTO_INCREMENT for table active_substance
 --
-ALTER TABLE drastiki_ousia
-  MODIFY ousia_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE active_substance
+  MODIFY substance_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table eikona
+-- AUTO_INCREMENT for table image
 --
-ALTER TABLE eikona
-  MODIFY eikona_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE image
+  MODIFY image_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table ergastiiriaki_exetasi
+-- AUTO_INCREMENT for table lab_test
 --
-ALTER TABLE ergastiiriaki_exetasi
-  MODIFY exetasi_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE lab_test
+  MODIFY test_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table farmako
+-- AUTO_INCREMENT for table medication
 --
-ALTER TABLE farmako
-  MODIFY farmako_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE medication
+  MODIFY medication_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table iatriki_praxi
+-- AUTO_INCREMENT for table medical_procedure
 --
-ALTER TABLE iatriki_praxi
-  MODIFY praxi_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE medical_procedure
+  MODIFY procedure_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table klini
+-- AUTO_INCREMENT for table bed
 --
-ALTER TABLE klini
-  MODIFY klini_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE bed
+  MODIFY bed_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table nosileia
+-- AUTO_INCREMENT for table hospitalization
 --
-ALTER TABLE nosileia
-  MODIFY nosileia_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE hospitalization
+  MODIFY hospitalization_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table oikeios
+-- AUTO_INCREMENT for table emergency_contact
 --
-ALTER TABLE oikeios
-  MODIFY oikeios_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE emergency_contact
+  MODIFY emergency_contact_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table syntagografisi
+-- AUTO_INCREMENT for table prescription
 --
-ALTER TABLE syntagografisi
-  MODIFY syntagografisi_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE prescription
+  MODIFY prescription_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table tmima
+-- AUTO_INCREMENT for table department
 --
-ALTER TABLE tmima
-  MODIFY tmima_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE department
+  MODIFY department_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table vardia
+-- AUTO_INCREMENT for table shift
 --
-ALTER TABLE vardia
-  MODIFY vardia_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE shift
+  MODIFY shift_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table xwros_epemvasis
+-- AUTO_INCREMENT for table procedure_room
 --
-ALTER TABLE xwros_epemvasis
-  MODIFY xwros_id int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE procedure_room
+  MODIFY room_id int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
 --
 
 --
--- Constraints for table allergia
+-- Constraints for table allergy
 --
-ALTER TABLE allergia
-  ADD CONSTRAINT fk_all_asthenis FOREIGN KEY (AMKA_astheni) REFERENCES asthenis (AMKA) ON DELETE CASCADE,
-  ADD CONSTRAINT fk_all_ousia FOREIGN KEY (ousia_id) REFERENCES drastiki_ousia (ousia_id) ON DELETE CASCADE;
+ALTER TABLE allergy
+  ADD CONSTRAINT fk_all_patient FOREIGN KEY (patient_ssn) REFERENCES patient (ssn) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_all_ousia FOREIGN KEY (substance_id) REFERENCES active_substance (substance_id) ON DELETE CASCADE;
 
 --
--- Constraints for table axiologisi_iatrou
+-- Constraints for table doctor_review
 --
-ALTER TABLE axiologisi_iatrou
-  ADD CONSTRAINT fk_axi_iatros FOREIGN KEY (AMKA_iatrou) REFERENCES iatros (AMKA),
-  ADD CONSTRAINT fk_axi_nosileia FOREIGN KEY (nosileia_id) REFERENCES nosileia (nosileia_id) ON DELETE CASCADE;
+ALTER TABLE doctor_review
+  ADD CONSTRAINT fk_axi_doctor FOREIGN KEY (doctor_ssn) REFERENCES doctor (ssn),
+  ADD CONSTRAINT fk_axi_hospitalization FOREIGN KEY (hospitalization_id) REFERENCES hospitalization (hospitalization_id) ON DELETE CASCADE;
 
 --
--- Constraints for table axiologisi_nosilias
+-- Constraints for table hospitalization_review
 --
-ALTER TABLE axiologisi_nosilias
-  ADD CONSTRAINT fk_axn_nosileia FOREIGN KEY (nosileia_id) REFERENCES nosileia (nosileia_id) ON DELETE CASCADE;
+ALTER TABLE hospitalization_review
+  ADD CONSTRAINT fk_axn_hospitalization FOREIGN KEY (hospitalization_id) REFERENCES hospitalization (hospitalization_id) ON DELETE CASCADE;
 
 --
--- Constraints for table dialogi
+-- Constraints for table triage
 --
-ALTER TABLE dialogi
-  ADD CONSTRAINT fk_dial_asthenis FOREIGN KEY (AMKA_astheni) REFERENCES asthenis (AMKA),
-  ADD CONSTRAINT fk_dial_nosileia FOREIGN KEY (nosileia_id) REFERENCES nosileia (nosileia_id) ON DELETE SET NULL,
-  ADD CONSTRAINT fk_dial_nosileutis FOREIGN KEY (AMKA_nosileutis) REFERENCES nosileutis (AMKA);
+ALTER TABLE triage
+  ADD CONSTRAINT fk_dial_patient FOREIGN KEY (patient_ssn) REFERENCES patient (ssn),
+  ADD CONSTRAINT fk_dial_hospitalization FOREIGN KEY (hospitalization_id) REFERENCES hospitalization (hospitalization_id) ON DELETE SET NULL,
+  ADD CONSTRAINT fk_dial_nurse FOREIGN KEY (nurse_ssn) REFERENCES nurse (ssn);
 
 --
--- Constraints for table dioikitiko_proswpiko
+-- Constraints for table administrative_staff
 --
-ALTER TABLE dioikitiko_proswpiko
-  ADD CONSTRAINT fk_dioikitiko_proswpiko FOREIGN KEY (AMKA_proswpikou) REFERENCES proswpiko (AMKA) ON DELETE CASCADE,
-  ADD CONSTRAINT fk_dioikitiko_tmima FOREIGN KEY (tmima_id) REFERENCES tmima (tmima_id);
+ALTER TABLE administrative_staff
+  ADD CONSTRAINT fk_administrative_staff FOREIGN KEY (staff_ssn) REFERENCES staff (ssn) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_dioikitiko_department FOREIGN KEY (department_id) REFERENCES department (department_id);
 
 --
--- Constraints for table ergastiiriaki_exetasi
+-- Constraints for table lab_test
 --
-ALTER TABLE ergastiiriaki_exetasi
-  ADD CONSTRAINT fk_ex_iatros FOREIGN KEY (AMKA_iatrou) REFERENCES iatros (AMKA),
-  ADD CONSTRAINT fk_ex_nosileia FOREIGN KEY (nosileia_id) REFERENCES nosileia (nosileia_id);
+ALTER TABLE lab_test
+  ADD CONSTRAINT fk_ex_doctor FOREIGN KEY (doctor_ssn) REFERENCES doctor (ssn),
+  ADD CONSTRAINT fk_ex_hospitalization FOREIGN KEY (hospitalization_id) REFERENCES hospitalization (hospitalization_id);
 
 --
--- Constraints for table farmako_ousia
+-- Constraints for table medication_substance
 --
-ALTER TABLE farmako_ousia
-  ADD CONSTRAINT fk_fo_farmako FOREIGN KEY (farmako_id) REFERENCES farmako (farmako_id) ON DELETE CASCADE,
-  ADD CONSTRAINT fk_fo_ousia FOREIGN KEY (ousia_id) REFERENCES drastiki_ousia (ousia_id) ON DELETE CASCADE;
+ALTER TABLE medication_substance
+  ADD CONSTRAINT fk_fo_medication FOREIGN KEY (medication_id) REFERENCES medication (medication_id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_fo_ousia FOREIGN KEY (substance_id) REFERENCES active_substance (substance_id) ON DELETE CASCADE;
 
 --
--- Constraints for table iatriki_praxi
+-- Constraints for table medical_procedure
 --
-ALTER TABLE iatriki_praxi
-  ADD CONSTRAINT fk_praxi_nosileia FOREIGN KEY (nosileia_id) REFERENCES nosileia (nosileia_id),
-  ADD CONSTRAINT fk_praxi_xeirourgos FOREIGN KEY (AMKA_kyriou_xeirourgou) REFERENCES iatros (AMKA),
-  ADD CONSTRAINT fk_praxi_xwros FOREIGN KEY (xwros_id) REFERENCES xwros_epemvasis (xwros_id);
+ALTER TABLE medical_procedure
+  ADD CONSTRAINT fk_praxi_hospitalization FOREIGN KEY (hospitalization_id) REFERENCES hospitalization (hospitalization_id),
+  ADD CONSTRAINT fk_praxi_xeirourgos FOREIGN KEY (chief_surgeon_ssn) REFERENCES doctor (ssn),
+  ADD CONSTRAINT fk_praxi_xwros FOREIGN KEY (room_id) REFERENCES procedure_room (room_id);
 
 --
--- Constraints for table iatros
+-- Constraints for table doctor
 --
-ALTER TABLE iatros
-  ADD CONSTRAINT fk_iatros_epoptis FOREIGN KEY (AMKA_epopti) REFERENCES iatros (AMKA) ON DELETE SET NULL,
-  ADD CONSTRAINT fk_iatros_proswpiko FOREIGN KEY (AMKA_proswpikou) REFERENCES proswpiko (AMKA) ON DELETE CASCADE;
+ALTER TABLE doctor
+  ADD CONSTRAINT fk_doctor_epoptis FOREIGN KEY (supervisor_ssn) REFERENCES doctor (ssn) ON DELETE SET NULL,
+  ADD CONSTRAINT fk_doctor_staff FOREIGN KEY (staff_ssn) REFERENCES staff (ssn) ON DELETE CASCADE;
 
 --
--- Constraints for table iatros_tmima
+-- Constraints for table doctor_department
 --
-ALTER TABLE iatros_tmima
-  ADD CONSTRAINT fk_it_iatros FOREIGN KEY (AMKA_iatrou) REFERENCES iatros (AMKA) ON DELETE CASCADE,
-  ADD CONSTRAINT fk_it_tmima FOREIGN KEY (tmima_id) REFERENCES tmima (tmima_id) ON DELETE CASCADE;
+ALTER TABLE doctor_department
+  ADD CONSTRAINT fk_it_doctor FOREIGN KEY (doctor_ssn) REFERENCES doctor (ssn) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_it_department FOREIGN KEY (department_id) REFERENCES department (department_id) ON DELETE CASCADE;
 
 --
--- Constraints for table klini
+-- Constraints for table bed
 --
-ALTER TABLE klini
-  ADD CONSTRAINT fk_klini_tmima FOREIGN KEY (tmima_id) REFERENCES tmima (tmima_id) ON DELETE CASCADE;
+ALTER TABLE bed
+  ADD CONSTRAINT fk_bed_department FOREIGN KEY (department_id) REFERENCES department (department_id) ON DELETE CASCADE;
 
 --
--- Constraints for table nosileia
+-- Constraints for table hospitalization
 --
-ALTER TABLE nosileia
-  ADD CONSTRAINT fk_nos_asthenis FOREIGN KEY (AMKA_astheni) REFERENCES asthenis (AMKA),
-  ADD CONSTRAINT fk_nos_ken FOREIGN KEY (kwdikos_KEN) REFERENCES ken (kwdikos_KEN),
-  ADD CONSTRAINT fk_nos_klini FOREIGN KEY (klini_id) REFERENCES klini (klini_id),
-  ADD CONSTRAINT fk_nos_tmima FOREIGN KEY (tmima_id) REFERENCES tmima (tmima_id);
+ALTER TABLE hospitalization
+  ADD CONSTRAINT fk_nos_patient FOREIGN KEY (patient_ssn) REFERENCES patient (ssn),
+  ADD CONSTRAINT fk_nos_drg FOREIGN KEY (ken_code) REFERENCES ken (ken_code),
+  ADD CONSTRAINT fk_nos_bed FOREIGN KEY (bed_id) REFERENCES bed (bed_id),
+  ADD CONSTRAINT fk_nos_department FOREIGN KEY (department_id) REFERENCES department (department_id);
 
 --
--- Constraints for table nosileutis
+-- Constraints for table nurse
 --
-ALTER TABLE nosileutis
-  ADD CONSTRAINT fk_nosileutis_proswpiko FOREIGN KEY (AMKA_proswpikou) REFERENCES proswpiko (AMKA) ON DELETE CASCADE,
-  ADD CONSTRAINT fk_nosileutis_tmima FOREIGN KEY (tmima_id) REFERENCES tmima (tmima_id);
+ALTER TABLE nurse
+  ADD CONSTRAINT fk_nurse_staff FOREIGN KEY (staff_ssn) REFERENCES staff (ssn) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_nurse_department FOREIGN KEY (department_id) REFERENCES department (department_id);
 
 --
--- Constraints for table oikeios
+-- Constraints for table emergency_contact
 --
-ALTER TABLE oikeios
-  ADD CONSTRAINT fk_oikeios_asthenis FOREIGN KEY (AMKA_astheni) REFERENCES asthenis (AMKA) ON DELETE CASCADE;
+ALTER TABLE emergency_contact
+  ADD CONSTRAINT fk_emergency_contact_patient FOREIGN KEY (patient_ssn) REFERENCES patient (ssn) ON DELETE CASCADE;
 
 --
--- Constraints for table symmetoxi_vardias
+-- Constraints for table shift_participation
 --
-ALTER TABLE symmetoxi_vardias
-  ADD CONSTRAINT fk_sv_proswpiko FOREIGN KEY (AMKA_proswpikou) REFERENCES proswpiko (AMKA) ON DELETE CASCADE,
-  ADD CONSTRAINT fk_sv_vardia FOREIGN KEY (vardia_id) REFERENCES vardia (vardia_id) ON DELETE CASCADE;
+ALTER TABLE shift_participation
+  ADD CONSTRAINT fk_sv_staff FOREIGN KEY (staff_ssn) REFERENCES staff (ssn) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_sv_shift FOREIGN KEY (shift_id) REFERENCES shift (shift_id) ON DELETE CASCADE;
 
 --
--- Constraints for table syntagografisi
+-- Constraints for table prescription
 --
-ALTER TABLE syntagografisi
-  ADD CONSTRAINT fk_syn_asthenis FOREIGN KEY (AMKA_astheni) REFERENCES asthenis (AMKA),
-  ADD CONSTRAINT fk_syn_farmako FOREIGN KEY (farmako_id) REFERENCES farmako (farmako_id),
-  ADD CONSTRAINT fk_syn_iatros FOREIGN KEY (AMKA_iatrou) REFERENCES iatros (AMKA),
-  ADD CONSTRAINT fk_syn_nosileia FOREIGN KEY (nosileia_id) REFERENCES nosileia (nosileia_id);
+ALTER TABLE prescription
+  ADD CONSTRAINT fk_syn_patient FOREIGN KEY (patient_ssn) REFERENCES patient (ssn),
+  ADD CONSTRAINT fk_syn_medication FOREIGN KEY (medication_id) REFERENCES medication (medication_id),
+  ADD CONSTRAINT fk_syn_doctor FOREIGN KEY (doctor_ssn) REFERENCES doctor (ssn),
+  ADD CONSTRAINT fk_syn_hospitalization FOREIGN KEY (hospitalization_id) REFERENCES hospitalization (hospitalization_id);
 
 --
--- Constraints for table tmima
+-- Constraints for table department
 --
-ALTER TABLE tmima
-  ADD CONSTRAINT fk_tmima_dieutintis FOREIGN KEY (AMKA_dieutinti) REFERENCES iatros (AMKA) ON DELETE SET NULL;
+ALTER TABLE department
+  ADD CONSTRAINT fk_department_dieutintis FOREIGN KEY (director_ssn) REFERENCES doctor (ssn) ON DELETE SET NULL;
 
 --
--- Constraints for table vardia
+-- Constraints for table shift
 --
-ALTER TABLE vardia
-  ADD CONSTRAINT fk_vardia_tmima FOREIGN KEY (tmima_id) REFERENCES tmima (tmima_id);
+ALTER TABLE shift
+  ADD CONSTRAINT fk_shift_department FOREIGN KEY (department_id) REFERENCES department (department_id);
 
 --
--- Constraints for table voithos_praxis
+-- Constraints for table procedure_assistant
 --
-ALTER TABLE voithos_praxis
-  ADD CONSTRAINT fk_vp_praxi FOREIGN KEY (praxi_id) REFERENCES iatriki_praxi (praxi_id) ON DELETE CASCADE,
-  ADD CONSTRAINT fk_vp_proswpiko FOREIGN KEY (AMKA_voithou) REFERENCES proswpiko (AMKA);
+ALTER TABLE procedure_assistant
+  ADD CONSTRAINT fk_vp_praxi FOREIGN KEY (procedure_id) REFERENCES medical_procedure (procedure_id) ON DELETE CASCADE,
+  ADD CONSTRAINT fk_vp_staff FOREIGN KEY (assistant_ssn) REFERENCES staff (ssn);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

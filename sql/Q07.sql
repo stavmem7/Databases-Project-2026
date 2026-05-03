@@ -1,10 +1,10 @@
 SELECT 
-    do.ousia_id,
-    do.onoma AS drastiki_ousia,
-    COUNT(DISTINCT al.AMKA_astheni) AS plithos_allergikon_asthenon,
-    COUNT(DISTINCT fo.farmako_id) AS plithos_farmakon
-FROM drastiki_ousia do
-LEFT JOIN allergia al ON do.ousia_id = al.ousia_id
-LEFT JOIN farmako_ousia fo ON do.ousia_id = fo.ousia_id
-GROUP BY do.ousia_id, do.onoma
-ORDER BY plithos_allergikon_asthenon DESC;
+    a.substance_id,
+    a.name AS active_substance,
+    COUNT(DISTINCT al.patient_ssn) AS allergic_patients,
+    COUNT(DISTINCT ms.medication_id) AS medications_count
+FROM active_substance a
+LEFT JOIN allergy al ON a.substance_id = al.substance_id
+LEFT JOIN medication_substance ms ON a.substance_id = ms.substance_id
+GROUP BY a.substance_id, a.name
+ORDER BY allergic_patients DESC;

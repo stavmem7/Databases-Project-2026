@@ -1,16 +1,16 @@
 SELECT 
-    do1.onoma AS ousia_1,
-    do2.onoma AS ousia_2,
-    COUNT(*) AS syllogos
-FROM syntagografisi s1
-JOIN syntagografisi s2 ON s1.AMKA_astheni = s2.AMKA_astheni
-    AND s1.nosileia_id = s2.nosileia_id
-    AND s1.farmako_id < s2.farmako_id
-JOIN farmako_ousia fo1 ON s1.farmako_id = fo1.farmako_id
-JOIN farmako_ousia fo2 ON s2.farmako_id = fo2.farmako_id
-JOIN drastiki_ousia do1 ON fo1.ousia_id = do1.ousia_id
-JOIN drastiki_ousia do2 ON fo2.ousia_id = do2.ousia_id
-WHERE fo1.ousia_id < fo2.ousia_id
-GROUP BY do1.ousia_id, do2.ousia_id, do1.onoma, do2.onoma
-ORDER BY syllogos DESC
+    a1.name AS substance_1,
+    a2.name AS substance_2,
+    COUNT(*) AS frequency
+FROM prescription pr1
+JOIN prescription pr2 ON pr1.patient_ssn = pr2.patient_ssn
+    AND pr1.hospitalization_id = pr2.hospitalization_id
+    AND pr1.medication_id < pr2.medication_id
+JOIN medication_substance ms1 ON pr1.medication_id = ms1.medication_id
+JOIN medication_substance ms2 ON pr2.medication_id = ms2.medication_id
+JOIN active_substance a1 ON ms1.substance_id = a1.substance_id
+JOIN active_substance a2 ON ms2.substance_id = a2.substance_id
+WHERE ms1.substance_id < ms2.substance_id
+GROUP BY a1.substance_id, a2.substance_id, a1.name, a2.name
+ORDER BY frequency DESC
 LIMIT 3;

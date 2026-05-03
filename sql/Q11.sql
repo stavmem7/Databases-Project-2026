@@ -1,21 +1,21 @@
 SELECT 
-    i.AMKA,
-    p.onoma,
-    p.eponymo,
-    i.eidikotita,
-    COUNT(ip.praxi_id) AS plithos_epemvaseon
-FROM iatros i
-JOIN proswpiko p ON i.AMKA = p.AMKA
-LEFT JOIN iatriki_praxi ip ON i.AMKA = ip.AMKA_kyriou_xeirourgou
-    AND YEAR(ip.im_wra_enarxis) = 2024
-GROUP BY i.AMKA, p.onoma, p.eponymo, i.eidikotita
-HAVING COUNT(ip.praxi_id) <= (
+    doc.ssn,
+    s.name,
+    s.surname,
+    doc.specialty,
+    COUNT(mp.procedure_id) AS total_procedures
+FROM doctor doc
+JOIN staff s ON doc.ssn = s.ssn
+LEFT JOIN medical_procedure mp ON doc.ssn = mp.chief_surgeon_ssn
+    AND YEAR(mp.start_datetime) = 2024
+GROUP BY doc.ssn, s.name, s.surname, doc.specialty
+HAVING COUNT(mp.procedure_id) <= (
     SELECT MAX(cnt) - 5
     FROM (
-        SELECT COUNT(praxi_id) AS cnt
-        FROM iatriki_praxi
-        WHERE YEAR(im_wra_enarxis) = 2024
-        GROUP BY AMKA_kyriou_xeirourgou
+        SELECT COUNT(procedure_id) AS cnt
+        FROM medical_procedure
+        WHERE YEAR(start_datetime) = 2024
+        GROUP BY chief_surgeon_ssn
     ) AS counts
 )
-ORDER BY plithos_epemvaseon DESC;
+ORDER BY total_procedures DESC;

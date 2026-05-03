@@ -1,13 +1,13 @@
 SELECT 
-    a.AMKA,
-    a.onoma,
-    a.eponymo,
-    t.onoma AS tmima,
-    COUNT(n.nosileia_id) AS plithos_nosilion,
-    SUM(n.synoliko_kostos) AS synoliko_kostos
-FROM asthenis a
-JOIN nosileia n ON a.AMKA = n.AMKA_astheni
-JOIN tmima t ON n.tmima_id = t.tmima_id
-GROUP BY a.AMKA, a.onoma, a.eponymo, n.tmima_id, t.onoma
-HAVING COUNT(n.nosileia_id) > 3
-ORDER BY plithos_nosilion DESC;
+    p.ssn,
+    p.name,
+    p.surname,
+    d.name AS department,
+    COUNT(h.hospitalization_id) AS total_hospitalizations,
+    SUM(h.total_cost) AS total_cost
+FROM patient p
+JOIN hospitalization h ON p.ssn = h.patient_ssn
+JOIN department d ON h.department_id = d.department_id
+GROUP BY p.ssn, p.name, p.surname, h.department_id, d.name
+HAVING COUNT(h.hospitalization_id) > 3
+ORDER BY total_hospitalizations DESC;

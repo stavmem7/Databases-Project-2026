@@ -1,2 +1,3 @@
-"AMKA","onoma","eponymo","tmima","plithos_nosilion","synoliko_kostos"
+"ssn","name","surname","department","total_hospitalizations","total_cost"
 "00000000657","Αλέξανδρος","Μακρής","Οφθαλμολογία","4","39987.68"
+

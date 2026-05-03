@@ -1,14 +1,14 @@
 SELECT 
-    p.AMKA,
-    p.onoma,
-    p.eponymo,
-    p.typos
-FROM proswpiko p
-WHERE p.AMKA NOT IN (
-    SELECT sv.AMKA_proswpikou
-    FROM symmetoxi_vardias sv
-    JOIN vardia v ON sv.vardia_id = v.vardia_id
-    WHERE v.imerominia = '2024-05-29' 
-    AND v.tmima_id = 2                 
+    s.ssn,
+    s.name,
+    s.surname,
+    s.type
+FROM staff s
+WHERE s.ssn NOT IN (
+    SELECT sp.staff_ssn
+    FROM shift_participation sp
+    JOIN shift sh ON sp.shift_id = sh.shift_id
+    WHERE sh.date = '2024-05-29'
+    AND sh.department_id = 1
 )
-ORDER BY p.typos, p.eponymo;
+ORDER BY s.type, s.surname;
