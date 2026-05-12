@@ -32207,3 +32207,142 @@ INSERT INTO procedure_room (room_id, name, type) VALUES
 (10, 'Χώρος 10', 'AΙTHOUSA_EPEMVASIS');
 SET FOREIGN_KEY_CHECKS = 1;
 COMMIT;
+
+-- ================================================
+-- Image data for ygeiopolis database
+-- Using Unsplash free images
+-- ================================================
+
+USE ygeiopolis;
+
+-- ================================================
+-- DOCTORS (80 doctors - using 10 rotating photos)
+-- ================================================
+INSERT INTO image (entity_type, entity_id, url, description) VALUES
+('doctor', 1, 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800', 'Doctor profile photo'),
+('doctor', 2, 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800', 'Doctor profile photo'),
+('doctor', 3, 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=800', 'Doctor profile photo'),
+('doctor', 4, 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=800', 'Doctor profile photo'),
+('doctor', 5, 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?w=800', 'Doctor profile photo'),
+('doctor', 6, 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=800', 'Doctor profile photo'),
+('doctor', 7, 'https://images.unsplash.com/photo-1638202993928-7267aad84c31?w=800', 'Doctor profile photo'),
+('doctor', 8, 'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=800', 'Doctor profile photo'),
+('doctor', 9, 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800', 'Doctor profile photo'),
+('doctor', 10, 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=800', 'Doctor profile photo');
+
+-- Doctors 11-80 (rotating the same 10 photos)
+INSERT INTO image (entity_type, entity_id, url, description)
+SELECT 'doctor', ssn_num, photo_url, 'Doctor profile photo'
+FROM (
+    SELECT d.ssn AS ssn_num,
+    CASE ((ROW_NUMBER() OVER (ORDER BY d.ssn)) % 10)
+        WHEN 1 THEN 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800'
+        WHEN 2 THEN 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800'
+        WHEN 3 THEN 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=800'
+        WHEN 4 THEN 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=800'
+        WHEN 5 THEN 'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?w=800'
+        WHEN 6 THEN 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=800'
+        WHEN 7 THEN 'https://images.unsplash.com/photo-1638202993928-7267aad84c31?w=800'
+        WHEN 8 THEN 'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=800'
+        WHEN 9 THEN 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800'
+        ELSE 'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=800'
+    END AS photo_url
+    FROM doctor d
+    WHERE CAST(d.ssn AS UNSIGNED) > 10
+) AS sub;
+
+-- ================================================
+-- NURSES (100 nurses)
+-- ================================================
+INSERT INTO image (entity_type, entity_id, url, description)
+SELECT 'nurse', ssn_num, photo_url, 'Nurse profile photo'
+FROM (
+    SELECT n.ssn AS ssn_num,
+    CASE ((ROW_NUMBER() OVER (ORDER BY n.ssn)) % 5)
+        WHEN 1 THEN 'https://images.unsplash.com/photo-1643297654416-05795d62e39c?w=800'
+        WHEN 2 THEN 'https://images.unsplash.com/photo-1591604021695-0c69b7c05981?w=800'
+        WHEN 3 THEN 'https://images.unsplash.com/photo-1614608682850-e0d6ed316d47?w=800'
+        WHEN 4 THEN 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800'
+        ELSE 'https://images.unsplash.com/photo-1603398938378-e54eab446dde?w=800'
+    END AS photo_url
+    FROM nurse n
+) AS sub;
+
+-- ================================================
+-- DEPARTMENTS (15 departments)
+-- ================================================
+INSERT INTO image (entity_type, entity_id, url, description) VALUES
+(1, 1, 'https://images.unsplash.com/photo-1504439468489-c8920d796a29?w=800', 'Cardiology department'),
+(1, 2, 'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800', 'Surgery department'),
+(1, 3, 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800', 'ICU department'),
+(1, 4, 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=800', 'Emergency department'),
+(1, 5, 'https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?w=800', 'Neurology department'),
+(1, 6, 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800', 'Pediatrics department'),
+(1, 7, 'https://images.unsplash.com/photo-1551076805-e1869033e561?w=800', 'Orthopedics department'),
+(1, 8, 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800', 'Oncology department'),
+(1, 9, 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800', 'Radiology department'),
+(1, 10, 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=800', 'Gastroenterology department'),
+(1, 11, 'https://images.unsplash.com/photo-1576671081837-49000212a370?w=800', 'Pulmonology department'),
+(1, 12, 'https://images.unsplash.com/photo-1512678080530-7760d81faba6?w=800', 'Nephrology department'),
+(1, 13, 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800', 'Dermatology department'),
+(1, 14, 'https://images.unsplash.com/photo-1588776814546-1ffbb3cd01b4?w=800', 'Ophthalmology department'),
+(1, 15, 'https://images.unsplash.com/photo-1571772996211-2f02c9727629?w=800', 'Urology department');
+
+-- Fix department inserts (entity_type should be string)
+DELETE FROM image WHERE entity_type = 1;
+
+INSERT INTO image (entity_type, entity_id, url, description) VALUES
+('department', 1, 'https://images.unsplash.com/photo-1504439468489-c8920d796a29?w=800', 'Cardiology department'),
+('department', 2, 'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800', 'Surgery department'),
+('department', 3, 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800', 'ICU department'),
+('department', 4, 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=800', 'Emergency department'),
+('department', 5, 'https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?w=800', 'Neurology department'),
+('department', 6, 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800', 'Pediatrics department'),
+('department', 7, 'https://images.unsplash.com/photo-1551076805-e1869033e561?w=800', 'Orthopedics department'),
+('department', 8, 'https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800', 'Oncology department'),
+('department', 9, 'https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=800', 'Radiology department'),
+('department', 10, 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=800', 'Gastroenterology department'),
+('department', 11, 'https://images.unsplash.com/photo-1576671081837-49000212a370?w=800', 'Pulmonology department'),
+('department', 12, 'https://images.unsplash.com/photo-1512678080530-7760d81faba6?w=800', 'Nephrology department'),
+('department', 13, 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=800', 'Dermatology department'),
+('department', 14, 'https://images.unsplash.com/photo-1588776814546-1ffbb3cd01b4?w=800', 'Ophthalmology department'),
+('department', 15, 'https://images.unsplash.com/photo-1571772996211-2f02c9727629?w=800', 'Urology department');
+
+-- ================================================
+-- PROCEDURE ROOMS (10 rooms)
+-- ================================================
+INSERT INTO image (entity_type, entity_id, url, description) VALUES
+('procedure_room', 1, 'https://images.unsplash.com/photo-1551190822-a9333d879b1f?w=800', 'Operating room 1'),
+('procedure_room', 2, 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800', 'Operating room 2'),
+('procedure_room', 3, 'https://images.unsplash.com/photo-1584515933487-779824d29309?w=800', 'Operating room 3'),
+('procedure_room', 4, 'https://images.unsplash.com/photo-1527613426441-4da17471b66d?w=800', 'Procedure room 4'),
+('procedure_room', 5, 'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800', 'Procedure room 5'),
+('procedure_room', 6, 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800', 'Procedure room 6'),
+('procedure_room', 7, 'https://images.unsplash.com/photo-1504439468489-c8920d796a29?w=800', 'Procedure room 7'),
+('procedure_room', 8, 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800', 'Procedure room 8'),
+('procedure_room', 9, 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=800', 'Procedure room 9'),
+('procedure_room', 10, 'https://images.unsplash.com/photo-1587351021759-3e566b6af7cc?w=800', 'Procedure room 10');
+
+-- ================================================
+-- MEDICATIONS (sample - 20 medications)
+-- ================================================
+INSERT INTO image (entity_type, entity_id, url, description)
+SELECT 'medication', medication_id,
+CASE (medication_id % 5)
+    WHEN 1 THEN 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800'
+    WHEN 2 THEN 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=800'
+    WHEN 3 THEN 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800'
+    WHEN 4 THEN 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=800'
+    ELSE 'https://images.unsplash.com/photo-1550572017-edd951b55104?w=800'
+END,
+'Medication photo'
+FROM medication
+LIMIT 20;
+
+-- ================================================
+-- HOSPITAL (general hospital photos)
+-- ================================================
+INSERT INTO image (entity_type, entity_id, url, description) VALUES
+('hospital', 1, 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=800', 'Hospital main entrance'),
+('hospital', 2, 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800', 'Hospital interior'),
+('hospital', 3, 'https://images.unsplash.com/photo-1504439468489-c8920d796a29?w=800', 'Hospital ward');
