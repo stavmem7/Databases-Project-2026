@@ -987,6 +987,157 @@ ALTER TABLE procedure_assistant
   ADD CONSTRAINT fk_vp_staff FOREIGN KEY (assistant_ssn) REFERENCES staff (ssn);
 COMMIT;
 
+DELIMITER //
+CREATE TRIGGER trg_no_circular_supervision
+BEFORE INSERT ON doctor
+FOR EACH ROW
+BEGIN
+    DECLARE supervisor_id CHAR(11);
+    DECLARE depth INT DEFAULT 0;
+    SET supervisor_id = NEW.supervisor_ssn;
+    WHILE supervisor_id IS NOT NULL AND depth < 100 DO
+        IF supervisor_id = NEW.ssn THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Circular supervision chain is not allowed';
+        END IF;
+        SELECT supervisor_ssn INTO supervisor_id FROM doctor WHERE ssn = supervisor_id;
+        SET depth = depth + 1;
+    END WHILE;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER trg_resident_must_have_supervisor
+BEFORE INSERT ON doctor
+FOR EACH ROW
+BEGIN
+    IF NEW.rank = 'RESIDENT' AND NEW.supervisor_ssn IS NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'A resident must have a supervisor';
+    END IF;
+END //
+DELIMITER ;
+DELIMITER //
+CREATE TRIGGER trg_director_no_supervisor
+BEFORE INSERT ON doctor
+FOR EACH ROW
+BEGIN
+    IF NEW.rank = 'DIRECTOR' AND NEW.supervisor_ssn IS NOT NULL THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'A director cannot have a supervisor';
+    END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER trg_no_allergy_prescription
+BEFORE INSERT ON prescription
+FOR EACH ROW
+BEGIN
+    DECLARE allergy_count INT;
+    SELECT COUNT(*) INTO allergy_count
+    FROM allergy al
+    JOIN medication_substance ms ON al.substance_id = ms.substance_id
+    WHERE al.patient_ssn = NEW.patient_ssn
+    AND ms.medication_id = NEW.medication_id;
+    IF allergy_count > 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Cannot prescribe: patient has allergy to active substance';
+    END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER trg_max_shifts_per_month
+BEFORE INSERT ON shift_participation
+FOR EACH ROW
+BEGIN
+    DECLARE shift_count INT;
+    DECLARE staff_type ENUM('DOCTOR','NURSE','ADMINISTRATIVE');
+    DECLARE max_shifts INT;
+    DECLARE shift_date DATE;
+
+    SELECT s.type INTO staff_type FROM staff s WHERE s.ssn = NEW.staff_ssn;
+    SELECT sh.date INTO shift_date FROM shift sh WHERE sh.shift_id = NEW.shift_id;
+
+    SET max_shifts = CASE staff_type
+        WHEN 'DOCTOR' THEN 15
+        WHEN 'NURSE' THEN 20
+        WHEN 'ADMINISTRATIVE' THEN 25
+    END;
+
+    SELECT COUNT(*) INTO shift_count
+    FROM shift_participation sp
+    JOIN shift sh ON sp.shift_id = sh.shift_id
+    WHERE sp.staff_ssn = NEW.staff_ssn
+    AND YEAR(sh.date) = YEAR(shift_date)
+    AND MONTH(sh.date) = MONTH(shift_date);
+
+    IF shift_count >= max_shifts THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Maximum shifts per month exceeded';
+    END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER trg_min_rest_between_shifts
+BEFORE INSERT ON shift_participation
+FOR EACH ROW
+BEGIN
+    DECLARE last_end DATETIME;
+    DECLARE new_start DATETIME;
+    DECLARE hours_diff INT;
+
+    SELECT TIMESTAMP(sh.date, sh.end_time) INTO last_end
+    FROM shift_participation sp
+    JOIN shift sh ON sp.shift_id = sh.shift_id
+    WHERE sp.staff_ssn = NEW.staff_ssn
+    ORDER BY TIMESTAMP(sh.date, sh.end_time) DESC
+    LIMIT 1;
+
+    SELECT TIMESTAMP(sh.date, sh.start_time) INTO new_start
+    FROM shift sh WHERE sh.shift_id = NEW.shift_id;
+
+    IF last_end IS NOT NULL THEN
+        SET hours_diff = TIMESTAMPDIFF(HOUR, last_end, new_start);
+        IF hours_diff < 8 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Minimum 8 hours rest required between shifts';
+        END IF;
+    END IF;
+END //
+DELIMITER ;
+
+DELIMITER //
+CREATE TRIGGER trg_max_consecutive_night_shifts
+BEFORE INSERT ON shift_participation
+FOR EACH ROW
+BEGIN
+    DECLARE night_count INT DEFAULT 0;
+    DECLARE shift_type ENUM('MORNING','AFTERNOON','NIGHT');
+
+    SELECT sh.type INTO shift_type FROM shift sh WHERE sh.shift_id = NEW.shift_id;
+
+    IF shift_type = 'NIGHT' THEN
+        SELECT COUNT(*) INTO night_count
+        FROM shift_participation sp
+        JOIN shift sh ON sp.shift_id = sh.shift_id
+        WHERE sp.staff_ssn = NEW.staff_ssn
+        AND sh.type = 'NIGHT'
+        AND sh.date >= DATE_SUB(
+            (SELECT date FROM shift WHERE shift_id = NEW.shift_id), 
+            INTERVAL 3 DAY
+        );
+
+        IF night_count >= 3 THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Maximum 3 consecutive night shifts exceeded';
+        END IF;
+    END IF;
+END //
+DELIMITER ;
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
