@@ -1,0 +1,16 @@
+SELECT 
+    doc.ssn,
+    s.name,
+    s.surname,
+    ROUND(AVG(dr.medical_care_quality), 2) AS avg_doctor_rating,
+    ROUND(AVG(hr.nursing_care_quality), 2) AS avg_nursing_care,
+    ROUND(AVG(hr.cleanliness), 2) AS avg_cleanliness,
+    ROUND(AVG(hr.food), 2) AS avg_food,
+    ROUND(AVG(hr.overall_experience), 2) AS avg_overall_experience
+FROM doctor doc
+JOIN staff s ON doc.ssn = s.ssn
+JOIN doctor_review dr ON doc.ssn = dr.doctor_ssn
+JOIN hospitalization h ON dr.hospitalization_id = h.hospitalization_id
+LEFT JOIN hospitalization_review hr ON h.hospitalization_id = hr.hospitalization_id
+WHERE doc.ssn = '00000000007'
+GROUP BY doc.ssn, s.name, s.surname;
