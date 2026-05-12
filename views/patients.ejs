@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>Ασθενείς | Υγειόπολις</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .custom-navbar { background-color: rgba(255, 255, 255, 0.95); border-bottom: 4px solid #0056b3; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .navbar-brand { font-weight: 700; color: #003366 !important; }
+    </style>
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg custom-navbar mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="/">YGEIOPOLIS</a>
+            <div class="collapse navbar-collapse justify-content-end">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="/patients">Ασθενείς</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/staff">Προσωπικό</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/departments">Τμήματα</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="mb-4">Μητρώο Ασθενών</h2>
+        <table class="table table-striped table-hover shadow-sm bg-white">
+            <thead class="table-dark">
+                <tr>
+                    <th>ΑΜΚΑ</th>
+                    <th>Όνομα</th>
+                    <th>Επώνυμο</th>
+                    <th>Ηλικία</th>
+                    <th>Ασφάλεια</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% patients.forEach(p => { %>
+                <tr>
+                    <td><%= p.ssn %></td>
+                    <td><%= p.name %></td>
+                    <td><%= p.surname %></td>
+                    <td><%= p.age %></td>
+                    <td><%= p.insurance_provider %></td>
+                </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

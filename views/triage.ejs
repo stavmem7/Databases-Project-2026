@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <title>Triage | Υγειόπολις</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #f8f9fa; 
+            padding-bottom: 50px; 
+        }
+        .custom-navbar { 
+            background-color: rgba(255, 255, 255, 0.95); 
+            border-bottom: 4px solid #0056b3; 
+        }
+        /* Χρωματική σήμανση ανάλογα με το επίπεδο επείγοντος */
+        .urgency-1 { border-left: 10px solid #dc3545; background-color: #fff5f5; }
+        .urgency-2 { border-left: 10px solid #fd7e14; background-color: #fffaf5; }
+        .urgency-3 { border-left: 10px solid #ffc107; background-color: #fffdf5; }
+        .urgency-4 { border-left: 10px solid #0dcaf0; background-color: #f5fcff; }
+        .urgency-5 { border-left: 10px solid #198754; background-color: #f5fff8; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg custom-navbar mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/" style="color: #003366;">YGEIOPOLIS</a>
+            <div class="collapse navbar-collapse justify-content-end">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="/patients">Ασθενείς</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/staff">Προσωπικό</a></li>
+                    <li class="nav-item"><a class="nav-link active fw-bold" href="/triage">Triage</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/pharmacy">Φαρμακείο</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <% if (typeof error !== 'undefined' && error === 'invalid_id') { %>
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-start border-danger border-5" role="alert">
+                <strong>Σφάλμα Καταχώρησης!</strong> Το SSN του Ασθενούς ή του Νοσηλευτή δεν βρέθηκε στο σύστημα. Παρακαλώ ελέγξτε την εγκυρότητα των στοιχείων.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <% } %>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-dark">Ουρά Αναμονής Επειγόντων</h2>
+            <button class="btn btn-danger btn-lg shadow" data-bs-toggle="modal" data-bs-target="#newTriageModal">
+                + Νέα Διαλογή
+            </button>
+        </div>
+
+        <div class="table-responsive bg-white rounded shadow-sm">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Άφιξη</th>
+                        <th>Ασθενής</th>
+                        <th>Επίπεδο</th>
+                        <th>Συμπτώματα</th>
+                        <th>Ενέργειες</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (cases.length > 0) { %>
+                        <% cases.forEach(c => { %>
+                            <tr class="urgency-<%= c.urgency_level %>">
+                                <td class="fw-bold"><%= new Date(c.arrival_time).toLocaleTimeString('el-GR') %></td>
+                                <td><%= c.name %> <%= c.surname %></td>
+                                <td><span class="badge rounded-pill bg-dark">L<%= c.urgency_level %></span></td>
+                                <td><small><%= c.symptoms %></small></td>
+                                <td>
+                                    <a href="/admission/<%= c.triage_id %>" class="btn btn-sm btn-success shadow-sm">
+                                        Εισαγωγή
+                                    </a>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">Δεν υπάρχουν ασθενείς στην ουρά αναμονής.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="newTriageModal" tabindex="-1" aria-labelledby="newTriageModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="newTriageModalLabel">Νέα Καταγραφή Περιστατικού</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form action="/triage/new" method="POST">
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">SSN Ασθενούς (AMKA)</label>
+                            <input type="text" name="patient_ssn" class="form-control" placeholder="π.χ. 12345678901" required maxlength="11">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">SSN Νοσηλευτή Διαλογής</label>
+                            <input type="text" name="nurse_ssn" class="form-control" placeholder="π.χ. 98765432109" required maxlength="11">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Επίπεδο Επείγοντος</label>
+                            <select name="urgency_level" class="form-select shadow-sm" required>
+                                <option value="1">1 - Άμεσο (Κόκκινο)</option>
+                                <option value="2">2 - Πολύ Επείγον (Πορτοκαλί)</option>
+                                <option value="3">3 - Επείγον (Κίτρινο)</option>
+                                <option value="4">4 - Λιγότερο Επείγον (Μπλε)</option>
+                                <option value="5">5 - Μη Επείγον (Πράσινο)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Συμπτώματα / Παρατηρήσεις</label>
+                            <textarea name="symptoms" class="form-control" rows="3" placeholder="Περιγραφή συμπτωμάτων..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Άκυρο</button>
+                        <button type="submit" class="btn btn-success px-4">Καταχώρηση στην Ουρά</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
