@@ -2,47 +2,93 @@
 <html lang="el">
 <head>
     <meta charset="UTF-8">
-    <title>Τμήματα | Υγειόπολις</title>
+    <title>Χάρτης Κλινικής | Υγειόπολις</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { background-color: #f8f9fa; }
-        .custom-navbar { background-color: rgba(255, 255, 255, 0.95); border-bottom: 4px solid #0056b3; }
-        .navbar-brand { font-weight: 700; color: #003366 !important; }
+        body { background-color: #f8f9fa; padding-top: 80px; } /* Τέλος αγκύλης body */
+        .floor-plan {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr /* Τέλος repeat */);
+            gap: 20px;
+            background: #eee;
+            padding: 30px;
+            border-radius: 20px;
+        } /* Τέλος αγκύλης .floor-plan */
+        .dept-room {
+            background: white;
+            border: 2px solid #ddd;
+            height: 180px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 15px;
+            transition: 0.3s;
+        } /* Τέλος αγκύλης .dept-room */
+        .dept-room:hover {
+            border-color: #0d6efd;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1 /* Τέλος rgba */);
+        } /* Τέλος αγκύλης .dept-room:hover */
+        .room-label { font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; } /* Τέλος αγκύλης .room-label */
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg custom-navbar mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow">
         <div class="container">
-            <a class="navbar-brand" href="/">YGEIOPOLIS</a>
-            <div class="collapse navbar-collapse justify-content-end">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="/patients">Ασθενείς</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/staff">Προσωπικό</a></li>
-                    <li class="nav-item"><a class="nav-link active fw-bold" href="/departments">Τμήματα</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/pharmacy">Φαρμακείο</a></li>
+            <a class="navbar-brand fw-bold" href="/?role=<%= role %>">YGEIOPOLIS</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <% if (role === 'doctor' /* Έλεγχος γιατρού 1 */) { %>
+                        <li class="nav-item"><a class="nav-link" href="/dashboard?role=<%= role %>">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/patients?role=<%= role %>">Ασθενείς</a></li>
+                    <% } /* Τέλος if doctor 1 */ %>
+
+                    <% if (role === 'doctor' || role === 'nurse' /* Έλεγχος προσωπικού */) { %>
+                        <li class="nav-item"><a class="nav-link" href="/triage?role=<%= role %>">Triage</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/hospitalizations?role=<%= role %>">Νοσηλείες</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/pharmacy?role=<%= role %>">Φαρμακείο</a></li>
+                    <% } /* Τέλος if doctor || nurse */ %>
+
+                    <% if (role === 'doctor' /* Έλεγχος γιατρού 2 */) { %>
+                        <li class="nav-item"><a class="nav-link" href="/staff?role=<%= role %>">Προσωπικό</a></li>
+                        <li class="nav-item"><a class="nav-link active fw-bold" href="/departments?role=<%= role %>">Τμήματα</a></li>
+                    <% } /* Τέλος if doctor 2 */ %>
+
+                    <% if (role === 'patient' /* Έλεγχος ασθενή */) { %>
+                        <li class="nav-item"><a class="nav-link" href="/#search-ssn">Το Ιστορικό μου</a></li>
+                    <% } /* Τέλος if patient */ %>
+
+                    <li class="nav-item"><a class="nav-link btn btn-outline-danger btn-sm ms-lg-3 px-3 text-white" href="/">Έξοδος</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-        <h2 class="mb-4 text-primary">Νοσοκομειακά Τμήματα</h2>
-        <div class="row">
-            <% departments.forEach(dept => { %>
-                <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow-sm border-0">
-                        <div class="card-body">
-                            <h5 class="card-title fw-bold text-dark"><%= dept.name %></h5>
-                            <p class="card-text">
-                                <strong>Κτήριο/Όροφος:</strong> <%= dept.floor_building %><br>
-                                <strong>Κλίνες:</strong> <%= dept.bed_count %><br>
-                                <strong>Διευθυντής:</strong> <%= dept.director_name || 'Δεν έχει οριστεί' %>
-                            </p>
-                        </div>
+    <div class="container mt-4">
+        <h2 class="fw-bold mb-4 text-dark"><i class="bi bi-map me-2"></i>Χάρτης Ορόφων & Τμημάτων</h2>
+
+        <div class="floor-plan shadow-sm">
+            <% departments.forEach(dept => { /* Έναρξη forEach τμημάτων */ %>
+                <div class="dept-room">
+                    <div class="room-label"><%= dept.name %></div>
+                    <div class="small text-muted mb-3"><i class="bi bi-layers"></i> <%= dept.floor_building %></div>
+                    
+                    <div class="badge bg-light text-dark p-2 w-100 mb-2" style="border: 1px solid #eee;">
+                        <%= dept.bed_count %> Κλίνες
+                    </div>
+                    
+                    <div class="small fw-bold text-primary">
+                        Διευθυντής: <br>
+                        <span class="text-dark"><%= dept.director_name || 'Δεν έχει οριστεί' /* Τέλος fallback */ %></span>
                     </div>
                 </div>
-            <% }); %>
+            <% }) /* Τέλος departments.forEach */ %>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -9,12 +9,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true}));
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use((req,res,next) => {
+    res.locals.role = req.query.role || null;
+    next();
+});
+
+
 const dbConfig = {
     host: '127.0.0.1',
     user: 'root',
     password: '',
     database: 'dbtest'
 };
+
 
 app.get('/', async(req, res) => {
     res.render('home');
@@ -103,6 +110,7 @@ app.get('/triage', async (req, res) => {
 
 app.post('/triage/new', async (req,res) => {
     let connection;
+    const role = req.query.role;
     try{
         const { patient_ssn, nurse_ssn, urgency_level, symptoms } = req.body;
         connection = await mysql.createConnection(dbConfig);
@@ -110,13 +118,13 @@ app.post('/triage/new', async (req,res) => {
         const [nurseExists] = await connection.execute('SELECT ssn FROM nurse WHERE ssn = ?', [nurse_ssn]);
         if(patientExists.length === 0 || nurseExists.length === 0){
             await connection.end();
-            return res.redirect('/triage?error=invalid_id');
+            return res.redirect(`/triage?role=${role}&error=invalid_id`);
         }
         await connection.execute(`
             INSERT INTO triage (patient_ssn, nurse_ssn, urgency_level, symptoms, arrival_time, outcome)
             VALUES (?,?,?,?, NOW(), 'ADMITTED')
             `, [patient_ssn, nurse_ssn, urgency_level, symptoms]);
-        res.redirect('/triage');
+        res.redirect('/triage?role=' + req.query.role);
     }catch(error){
         console.error("Error saving triage: ", error);
         res.status(500).send("Error saving triage");
@@ -129,6 +137,7 @@ app.post('/triage/new', async (req,res) => {
 
 app.get('/admission/:triage_id', async (req,res) => {
     let connection;
+    const role = req.query.role;
     try{
         const triage_id = req.params.triage_id;
         connection = await mysql.createConnection(dbConfig);
@@ -151,7 +160,8 @@ app.get('/admission/:triage_id', async (req,res) => {
             triage: triageData[0],
             beds: beds,
             kenCodes: kenCodes,
-            icd10: icd10
+            icd10: icd10,
+            role: role
         });
     }catch(error){
         console.error(error);
@@ -163,6 +173,7 @@ app.get('/admission/:triage_id', async (req,res) => {
 
 app.post('/admission/complete', async (req,res) => {
     let connection;
+    const role = req.query.role;
     try {
         const {triage_id, patient_ssn, bed_id, ken_code, diagnosis_code, diagnosis_desc } = req.body;
         connection = await mysql.createConnection(dbConfig);
@@ -184,7 +195,7 @@ app.post('/admission/complete', async (req,res) => {
         await connection.execute("UPDATE bed SET status = 'OCCUPIED' WHERE bed_id = ?", [bed_id]);
 
         await connection.commit();
-        res.redirect('/triage');
+        res.redirect(`/triage?role=${role}`);
     }catch(error) {
         if(connection) await connection.rollback();
         console.error("Admission Transaction Failed: ", error);
@@ -193,6 +204,237 @@ app.post('/admission/complete', async (req,res) => {
         if(connection) await connection.end();
     }
 });
+
+app.get('/hospitalizations', async (req,res) => {
+    let connection;
+    const role = req.query.role;
+    try{
+        connection = await mysql.createConnection(dbConfig);
+        const [rows] = await connection.execute(`
+            SELECT h.hospitalization_id, p.name, p.surname, d.name AS dept_name, b.unique_number AS bed_no, h.admission_date
+            FROM hospitalization h
+            JOIN patient p ON h.patient_ssn = p.ssn
+            JOIN department d ON h.department_id = d.department_id
+            JOIN bed b ON h.bed_id = b.bed_id
+            WHERE h.discharge_date IS NULL
+            ORDER BY h.admission_date DESC
+            `);
+        
+        res.render('hospitalizations', { admissions: rows, role: role});
+    }catch(error){
+        console.error(error);
+        res.status(500).send("Error retrieving hospitalizations");
+    }finally{
+        if (connection) await connection.end();
+    }
+});
+
+app.get('/hospitalizations/:hosp_id/tests', async (req, res) => {
+    let connection; 
+    const role = req.query.role; 
+    try {
+        const hosp_id = req.params.hosp_id; 
+        connection = await mysql.createConnection(dbConfig); 
+
+        const [tests] = await connection.execute(`
+            SELECT type, date, result_text, result_numeric, unit, code
+            FROM lab_test 
+            WHERE hospitalization_id = ?
+            ORDER BY date DESC`, [hosp_id]); 
+
+        res.render('tests', { tests: tests, hosp_id: hosp_id, role: role }); 
+    } catch (error) {
+        console.error(error); 
+        res.status(500).send("Error retrieving lab tests"); 
+    } finally {
+        if (connection) await connection.end(); 
+    } 
+});
+
+app.get('/prescription/new/:hosp_id', async (req,res) => {
+    let connection;
+    const role = req.query.role;
+    try{
+        const hosp_id = req.params.hosp_id;
+        connection = await mysql.createConnection(dbConfig);
+
+        const [hospInfo] = await connection.execute(`
+            SELECT h.hospitalization_id, p.name, p.surname, p.ssn
+            FROM hospitalization h
+            JOIN patient p ON h.patient_ssn = p.ssn
+            WHERE h.hospitalization_id = ?`, [hosp_id]);
+
+        const [meds] = await connection.execute(`
+            SELECT medication_id, name FROM medication`);
+
+        const [doctors] = await connection.execute(`
+            SELECT d.ssn, s.surname
+            FROM doctor d
+            JOIN staff s ON d.staff_ssn = s.ssn`);
+
+        res.render('new_prescription', {
+            hosp: hospInfo[0],
+            meds: meds,
+            doctors: doctors,
+            error: req.query.error || null,
+            substance: req.query.substance || null,
+            role: role
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Error preparing prescription");
+    } finally {
+        if (connection) await connection.end();
+    }
+});
+
+
+app.post('/prescription/save', async (req, res) => {
+    let connection;
+    const role = req.query.role;
+    try {
+        const { hospitalization_id, patient_ssn, doctor_ssn, medication_id, dosage, frequency } = req.body;
+
+        connection = await mysql.createConnection(dbConfig);
+    
+        const [allergyCheck] = await connection.execute(`
+            SELECT asub.name AS substance_name
+            FROM medication_substance ms
+            JOIN active_substance asub ON ms.substance_id = asub.substance_id
+            JOIN allergy a ON a.substance_id = asub.substance_id
+            WHERE ms.medication_id = ? AND a.patient_ssn = ?
+            `, [medication_id, patient_ssn]);
+        
+        if (allergyCheck.length > 0) {
+            const substance = allergyCheck[0].substance_name;
+            return res.redirect(`/prescription/new/${hospitalization_id}?role=${role}&error=allergy&substance=${substance}`);
+        }
+
+        await connection.execute(`
+            INSERT INTO prescription (doctor_ssn, patient_ssn, medication_id, hospitalization_id, dosage, frequency, start_date)
+            VALUES (?,?,?,?,?,?, CURDATE())
+            `, [doctor_ssn, patient_ssn, medication_id, hospitalization_id, dosage, frequency]);
+        
+        res.redirect(`/hospitalizations?role=${role}`);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Error during prescription");
+    } finally {
+        if (connection) await connection.end();
+    }
+});
+
+app.post('/discharge/:hosp_id', async (req,res) => {
+    let connection;
+    const role = req.query.role;
+    try{
+        const hosp_id = req.params.hosp_id;
+        connection = await mysql.createConnection(dbConfig);
+
+        await connection.beginTransaction();
+
+        const [hospData] = await connection.execute(`
+            SELECT bed_id FROM hospitalization WHERE hospitalization_id = ?`, [hosp_id]);
+        
+        if (hospData.length>0){
+            const bed_id = hospData[0].bed_id;
+
+            await connection.execute(`
+                UPDATE hospitalization SET discharge_date = CURDATE() WHERE hospitalization_id = ?
+                `, [hosp_id]);
+
+            await connection.execute(
+                "UPDATE bed SET status = 'AVAILABLE' WHERE bed_id = ?",[bed_id]
+            );
+        }
+
+        await connection.commit();
+        res.redirect(`/hospitalizations?role=${role}`);    
+    } catch(error){
+        if (connection) await connection.rollback();
+        console.error("Discharge Error: ", error);
+        res.status(500).send("Error during Discharge");
+    } finally{
+        if (connection) await connection.end();
+    }
+});
+
+app.get('/dashboard', async (req,res) => {
+    let connection;
+    const role = req.query.role;
+    try{
+        connection = await mysql.createConnection(dbConfig);
+
+        const [hospCount] = await connection.execute(`
+            SELECT COUNT(*) AS total FROM hospitalization WHERE discharge_date IS NULL 
+            `);
+
+        const [triageWait] = await connection.execute(`
+            SELECT COUNT(*) AS total FROM triage WHERE hospitalization_id IS NULL AND outcome != 'DISCHARGED'
+            `);
+
+        const [deptStats] = await connection.execute(`
+            SELECT d.name, d.bed_count,
+                (SELECT COUNT(*) FROM bed b WHERE b.department_id = d.department_id AND b.status = 'OCCUPIED') AS occupied_beds
+            FROM department d
+            `);
+        const [recentAdmissions] = await connection.execute(`
+            SELECT p.name, p.surname, d.name AS dept_name, h.admission_date
+            FROM hospitalization h
+            JOIN patient p ON h.patient_ssn = p.ssn
+            JOIN department d ON h.department_id = d.department_id
+            ORDER BY h.admission_date DESC LIMIT 5
+            `);
+        
+            res.render('dashboard' , {
+                stats: {
+                    currentPatients: hospCount[0].total,
+                    triageWaiting: triageWait[0].total
+                },
+                deptStats: deptStats,
+                recent: recentAdmissions,
+                role: role
+            });
+    }catch(error){
+        console.error(error);
+        res.status(500).send("Error loading dashboard");
+    }
+});
+
+app.get('/my-results', async(req,res) => {
+    let connection;
+    const role = req.query.role;
+    try {
+        const ssn = req.query.ssn;
+        if (!ssn) return res.redirect('/?role=patient');
+
+        connection = await mysql.createConnection(dbConfig);
+
+        const [patientInfo] = await connection.execute(`
+            SELECT name, surname FROM patient WHERE ssn = ?`, [ssn]);
+
+        const [history] = await connection.execute(`
+            SELECT h.admission_date, h.discharge_date, h.admission_diagnosis_desc, d.name AS dept_name
+            FROM hospitalization h
+            JOIN department d ON h.department_id = d.department_id
+            WHERE h.patient_ssn = ?
+            ORDER BY h.admission_date DESC`, [ssn]
+        );
+
+        res.render('my-results', {
+            patient: patientInfo[0] || null,
+            history: history,
+            ssn: ssn,
+            role: role
+        });
+    } catch (error){
+        console.error(error);
+        res.status(500).send("Error during search");
+    } finally {
+        if (connection) await connection.end();
+    }
+});
+
 
 const PORT = 3000;
 app.listen(PORT, () => {
