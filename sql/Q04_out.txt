@@ -1,2 +1,0 @@
-"ssn","name","surname","avg_doctor_rating","avg_nursing_care","avg_cleanliness","avg_food","avg_overall_experience"
-"00000000007","Στέφανος","Μακρής","3.67","3.00","4.50","2.50","3.50"
