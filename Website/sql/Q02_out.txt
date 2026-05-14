@@ -1,0 +1,3 @@
+"ssn","name","surname","specialty","rank","had_shift","total_procedures"
+"00000000017","Φωτεινή","Χριστοδούλου","Καρδιολογία","RESIDENT","NO","2"
+"00000000004","Κατερίνα","Τσακίρης","Καρδιολογία","RESIDENT","NO","1"
