@@ -217,11 +217,13 @@
 
 <script>
     // Auto-open the register modal if redirected back with patient_not_found
-    <% if (typeof error !== 'undefined' && error === 'patient_not_found') { %>
+    // Inject a boolean from server-side and use it in client-side JS to avoid EJS control tags inside script
+    const showRegisterModal = <%= (typeof error !== 'undefined' && error === 'patient_not_found') ? 'true' : 'false' %>;
+    if (showRegisterModal === 'true') {
         document.addEventListener('DOMContentLoaded', function () {
             var modal = new bootstrap.Modal(document.getElementById('registerPatientModal'));
             modal.show();
         });
-    <% } %>
+    }
 </script>
 </body> </html>
