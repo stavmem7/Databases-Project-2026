@@ -92,7 +92,7 @@ To get started with the Ygeiopolis Hospital Database, follow the steps below:
 3. **Install the required Node.js packages:**
 
    ```bash
-   cd Website
+   cd Code
    npm install
    ```
 
