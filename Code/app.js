@@ -14,14 +14,12 @@ app.use((req,res,next) => {
     next();
 });
 
-
 const dbConfig = {
     host: '127.0.0.1',
     user: 'root',
     password: '',
     database: 'ygeiopolis'
 };
-
 
 app.get('/', async(req, res) => {
     res.render('home');
@@ -39,6 +37,7 @@ app.get('/patients', async (req,res) => {
     }
 });
 
+// ✅ UPDATED: includes photo_url from image table
 app.get('/staff', async(req,res) => {
     try{
         const connection = await mysql.createConnection(dbConfig);
@@ -51,7 +50,6 @@ app.get('/staff', async(req,res) => {
             JOIN doctor d ON s.ssn = d.staff_ssn
             `);
         await connection.end();
-        console.log('First doctor photo_url:', doctors[0]?.photo_url);
         res.render('staff', { doctors: doctors, role: req.query.role || null });
     }catch(error){
         console.error(error);
@@ -59,6 +57,7 @@ app.get('/staff', async(req,res) => {
     }
 });
 
+// ✅ UPDATED: includes photo_url from image table
 app.get('/departments', async (req,res) =>{
     try{
         const connection = await mysql.createConnection(dbConfig);
@@ -80,7 +79,7 @@ app.get('/departments', async (req,res) =>{
     }
 });
 
-
+// ✅ UPDATED: includes photo_url from image table
 app.get('/pharmacy', async (req,res) => {
     try{
         const connection = await mysql.createConnection(dbConfig);
@@ -114,7 +113,14 @@ app.get('/triage', async (req, res) => {
             ORDER BY t.urgency_level ASC, t.arrival_time ASC
             `);
         await connection.end();
-        res.render('triage', { cases: rows, error: req.query.error || null});
+        res.render('triage', { 
+            cases: rows, 
+            error: req.query.error || null,
+            patient_ssn: req.query.patient_ssn || '',
+            nurse_ssn: req.query.nurse_ssn || '',
+            urgency_level: req.query.urgency_level || '3',
+            symptoms: req.query.symptoms || ''
+        });
     }catch(error){
         console.error(error);
         res.status(500).send("Error retrieving triage data");
@@ -129,9 +135,14 @@ app.post('/triage/new', async (req,res) => {
         connection = await mysql.createConnection(dbConfig);
         const [patientExists] = await connection.execute('SELECT ssn FROM patient WHERE ssn = ?', [patient_ssn]);
         const [nurseExists] = await connection.execute('SELECT ssn FROM nurse WHERE ssn = ?', [nurse_ssn]);
-        if(patientExists.length === 0 || nurseExists.length === 0){
+        if(nurseExists.length === 0){
             await connection.end();
             return res.redirect(`/triage?role=${role}&error=invalid_id`);
+        }
+        if(patientExists.length === 0){
+            await connection.end();
+            const params = new URLSearchParams({role, error: 'patient_not_found', patient_ssn, nurse_ssn, urgency_level, symptoms });
+            return res.redirect(`/triage?${params.toString()}`);
         }
         await connection.execute(`
             INSERT INTO triage (patient_ssn, nurse_ssn, urgency_level, symptoms, arrival_time, outcome)
@@ -145,6 +156,46 @@ app.post('/triage/new', async (req,res) => {
         if (connection && connection.connection._fatalError === null) {
             await connection.end();
         }
+    }
+});
+
+app.post('/triage/register-patient', async (req,res) => {
+    let connection;
+    const role = req.query.role || req.body.role;
+    try{
+        const {
+            patient_ssn, nurse_ssn, urgency_level, symptoms,
+            name, surname, father_name, age, gender, weight, height,
+            address, phone, email, occupation, nationality, insurance_provider
+        } = req.body;
+
+        connection = await mysql.createConnection(dbConfig);
+
+        const [nurseExists] = await connection.execute(`SELECT ssn FROM nurse WHERE ssn = ?`, [nurse_ssn]);
+        if(nurseExists.length === 0){
+            await connection.end();
+            return res.redirect(`/triage?role=${role}&error=invalid_nurse`);
+        }
+
+        await connection.beginTransaction();
+
+        await connection.execute(`
+            INSERT INTO patient (ssn, name, surname, father_name, age, gender, weight, height, address, phone, email, occupation, nationality, insurance_provider)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [patient_ssn, name, surname, father_name, age, gender, weight, height, address, phone, email, occupation, nationality, insurance_provider]);
+
+        await connection.execute(`
+            INSERT INTO triage (patient_ssn, nurse_ssn, urgency_level, symptoms, arrival_time, outcome)
+            VALUES (?, ?, ?, ?, NOW(), 'ADMITTED')
+        `, [patient_ssn, nurse_ssn, urgency_level, symptoms]);
+            
+        await connection.commit();
+        res.redirect('/triage?role=' + role); 
+    } catch (error){
+        console.error(error);
+        res.status(500).send("Error registering patient");
+    } finally {
+        if (connection) await connection.end();
     }
 });
 
@@ -301,7 +352,6 @@ app.get('/prescription/new/:hosp_id', async (req,res) => {
     }
 });
 
-
 app.post('/prescription/save', async (req, res) => {
     let connection;
     const role = req.query.role;
@@ -399,15 +449,15 @@ app.get('/dashboard', async (req,res) => {
             ORDER BY h.admission_date DESC LIMIT 5
             `);
         
-            res.render('dashboard' , {
-                stats: {
-                    currentPatients: hospCount[0].total,
-                    triageWaiting: triageWait[0].total
-                },
-                deptStats: deptStats,
-                recent: recentAdmissions,
-                role: role
-            });
+        res.render('dashboard', {
+            stats: {
+                currentPatients: hospCount[0].total,
+                triageWaiting: triageWait[0].total
+            },
+            deptStats: deptStats,
+            recent: recentAdmissions,
+            role: role
+        });
     }catch(error){
         console.error(error);
         res.status(500).send("Error loading dashboard");
@@ -447,7 +497,6 @@ app.get('/my-results', async(req,res) => {
         if (connection) await connection.end();
     }
 });
-
 
 const PORT = 3000;
 app.listen(PORT, () => {
