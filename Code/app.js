@@ -43,12 +43,16 @@ app.get('/staff', async(req,res) => {
     try{
         const connection = await mysql.createConnection(dbConfig);
         const [doctors] = await connection.execute(`
-            SELECT s.name, s.surname, d.specialty, d.rank, d.medical_license_no
+            SELECT s.name, s.surname, d.specialty, d.rank, d.medical_license_no,
+                (SELECT url FROM image 
+                 WHERE entity_type = 'doctor' AND entity_id = CAST(d.ssn AS UNSIGNED) 
+                 LIMIT 1) AS photo_url
             FROM staff s
             JOIN doctor d ON s.ssn = d.staff_ssn
             `);
-            await connection.end();
-            res.render('staff', { doctors: doctors });
+        await connection.end();
+        console.log('First doctor photo_url:', doctors[0]?.photo_url);
+        res.render('staff', { doctors: doctors, role: req.query.role || null });
     }catch(error){
         console.error(error);
         res.status(500).send("Error retrieving staff");
@@ -59,31 +63,40 @@ app.get('/departments', async (req,res) =>{
     try{
         const connection = await mysql.createConnection(dbConfig);
         const [rows] = await connection.execute(`
-            SELECT d.name, d.floor_building, d.bed_count, s.surname AS director_name
+            SELECT d.name, d.floor_building, d.bed_count, 
+                   s.surname AS director_name,
+                   (SELECT url FROM image 
+                    WHERE entity_type = 'department' AND entity_id = d.department_id 
+                    LIMIT 1) AS photo_url
             FROM department d
             LEFT JOIN doctor doc ON d.director_ssn = doc.ssn
             LEFT JOIN staff s ON doc.staff_ssn = s.ssn
             `);
         await connection.end();
-        res.render('departments', { departments: rows});
+        res.render('departments', { departments: rows, role: req.query.role || null });
     }catch(error){
         console.error(error);
         res.status(500).send("Error retrieving departments");
     }
 });
 
+
 app.get('/pharmacy', async (req,res) => {
     try{
         const connection = await mysql.createConnection(dbConfig);
         const [rows] = await connection.execute(`
-            SELECT m.name AS medication_name, m.ema_code, GROUP_CONCAT(asub.name SEPARATOR ', ') AS substances
+            SELECT m.name AS medication_name, m.ema_code, 
+                   GROUP_CONCAT(asub.name SEPARATOR ', ') AS substances,
+                   (SELECT url FROM image 
+                    WHERE entity_type = 'medication' AND entity_id = m.medication_id 
+                    LIMIT 1) AS photo_url
             FROM medication m
             LEFT JOIN medication_substance ms ON m.medication_id = ms.medication_id
             LEFT JOIN active_substance asub ON ms.substance_id = asub.substance_id
             GROUP BY m.medication_id
             `);
         await connection.end();
-        res.render('pharmacy', { medications: rows});
+        res.render('pharmacy', { medications: rows, role: req.query.role || null });
     }catch (error){
         console.error(error);
         res.status(500).send("Error retrieving pharmacy data");

@@ -6,8 +6,33 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { background-color: #f8f9fa; padding-top: 80px; } /* Τέλος αγκύλης body */
-        .pharmacy-container { background: white; border-radius: 15px; padding: 25px; } /* Τέλος αγκύλης .pharmacy-container */
+        body { background-color: #f8f9fa; padding-top: 80px; }
+        .med-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .med-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .med-photo {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+        .med-photo-placeholder {
+            width: 100%;
+            height: 160px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -16,26 +41,22 @@
             <a class="navbar-brand fw-bold" href="/?role=<%= role %>">YGEIOPOLIS</a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav ms-auto">
-                    <% if (role === 'doctor' /* Έλεγχος γιατρού 1 */) { %>
+                    <% if (role === 'doctor') { %>
                         <li class="nav-item"><a class="nav-link" href="/dashboard?role=<%= role %>">Dashboard</a></li>
                         <li class="nav-item"><a class="nav-link" href="/patients?role=<%= role %>">Ασθενείς</a></li>
-                    <% } /* Τέλος if doctor 1 */ %>
-
-                    <% if (role === 'doctor' || role === 'nurse' /* Έλεγχος προσωπικού */) { %>
+                    <% } %>
+                    <% if (role === 'doctor' || role === 'nurse') { %>
                         <li class="nav-item"><a class="nav-link" href="/triage?role=<%= role %>">Triage</a></li>
                         <li class="nav-item"><a class="nav-link" href="/hospitalizations?role=<%= role %>">Νοσηλείες</a></li>
                         <li class="nav-item"><a class="nav-link active fw-bold" href="/pharmacy?role=<%= role %>">Φαρμακείο</a></li>
-                    <% } /* Τέλος if doctor || nurse */ %>
-
-                    <% if (role === 'doctor' /* Έλεγχος γιατρού 2 */) { %>
+                    <% } %>
+                    <% if (role === 'doctor') { %>
                         <li class="nav-item"><a class="nav-link" href="/staff?role=<%= role %>">Προσωπικό</a></li>
                         <li class="nav-item"><a class="nav-link" href="/departments?role=<%= role %>">Τμήματα</a></li>
-                    <% } /* Τέλος if doctor 2 */ %>
-
-                    <% if (role === 'patient' /* Έλεγχος ασθενή */) { %>
+                    <% } %>
+                    <% if (role === 'patient') { %>
                         <li class="nav-item"><a class="nav-link" href="/#search-ssn">Το Ιστορικό μου</a></li>
-                    <% } /* Τέλος if patient */ %>
-
+                    <% } %>
                     <li class="nav-item"><a class="nav-link btn btn-outline-danger btn-sm ms-lg-3 px-3 text-white" href="/">Έξοδος</a></li>
                 </ul>
             </div>
@@ -43,28 +64,35 @@
     </nav>
 
     <div class="container mt-4">
-        <h2 class="mb-4 text-success fw-bold">Αποθέματα Φαρμακείου</h2>
-        <div class="pharmacy-container shadow-sm">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Ονομασία Φαρμάκου</th>
-                            <th>Κωδικός ΕΜΑ</th>
-                            <th>Δραστικές Ουσίες</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% medications.forEach(med => { /* Έναρξη forEach φαρμάκων */ %>
-                            <tr>
-                                <td class="fw-bold"><%= med.medication_name %></td>
-                                <td><code><%= med.ema_code %></code></td>
-                                <td><span class="badge bg-info text-dark"><%= med.substances || 'N/A' %></span></td>
-                            </tr>
-                        <% }); /* Τέλος medications.forEach */ %>
-                    </tbody>
-                </table>
-            </div>
+        <h2 class="mb-4 text-success fw-bold"><i class="bi bi-capsule me-2"></i>Αποθέματα Φαρμακείου</h2>
+
+        <div class="row g-4">
+            <% medications.forEach(med => { %>
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="med-card">
+                        <% if (med.photo_url) { %>
+                            <img src="<%= med.photo_url %>" alt="<%= med.medication_name %>" class="med-photo">
+                        <% } else { %>
+                            <div class="med-photo-placeholder">
+                                <i class="bi bi-capsule"></i>
+                            </div>
+                        <% } %>
+                        <div class="p-3">
+                            <h6 class="fw-bold mb-1"><%= med.medication_name %></h6>
+                            <div class="small mb-2"><code class="text-danger"><%= med.ema_code %></code></div>
+                            <div class="small text-muted">
+                                <% if (med.substances) { %>
+                                    <span class="badge bg-info text-dark" style="font-size:0.7rem; white-space:normal;">
+                                        <%= med.substances %>
+                                    </span>
+                                <% } else { %>
+                                    <span class="text-muted">N/A</span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
         </div>
     </div>
 

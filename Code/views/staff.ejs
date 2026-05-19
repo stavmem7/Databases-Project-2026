@@ -7,8 +7,23 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { background-color: #f8f9fa; padding-top: 80px; } /* Τέλος αγκύλης body */
-        .table-container { background: white; padding: 25px; border-radius: 15px; } /* Τέλος αγκύλης .table-container */
+        body { background-color: #f8f9fa; padding-top: 80px; }
+        .doctor-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            transition: 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .doctor-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        .doctor-photo {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
@@ -17,26 +32,22 @@
             <a class="navbar-brand fw-bold" href="/?role=<%= role %>">YGEIOPOLIS</a>
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav ms-auto">
-                    <% if (role === 'doctor' /* Έλεγχος γιατρού 1 */) { %>
+                    <% if (role === 'doctor') { %>
                         <li class="nav-item"><a class="nav-link" href="/dashboard?role=<%= role %>">Dashboard</a></li>
                         <li class="nav-item"><a class="nav-link" href="/patients?role=<%= role %>">Ασθενείς</a></li>
-                    <% } /* Τέλος if doctor 1 */ %>
-
-                    <% if (role === 'doctor' || role === 'nurse' /* Έλεγχος προσωπικού */) { %>
+                    <% } %>
+                    <% if (role === 'doctor' || role === 'nurse') { %>
                         <li class="nav-item"><a class="nav-link" href="/triage?role=<%= role %>">Triage</a></li>
                         <li class="nav-item"><a class="nav-link" href="/hospitalizations?role=<%= role %>">Νοσηλείες</a></li>
                         <li class="nav-item"><a class="nav-link" href="/pharmacy?role=<%= role %>">Φαρμακείο</a></li>
-                    <% } /* Τέλος if doctor || nurse */ %>
-
-                    <% if (role === 'doctor' /* Έλεγχος γιατρού 2 */) { %>
+                    <% } %>
+                    <% if (role === 'doctor') { %>
                         <li class="nav-item"><a class="nav-link active fw-bold" href="/staff?role=<%= role %>">Προσωπικό</a></li>
                         <li class="nav-item"><a class="nav-link" href="/departments?role=<%= role %>">Τμήματα</a></li>
-                    <% } /* Τέλος if doctor 2 */ %>
-
-                    <% if (role === 'patient' /* Έλεγχος ασθενή */) { %>
+                    <% } %>
+                    <% if (role === 'patient') { %>
                         <li class="nav-item"><a class="nav-link" href="/#search-ssn">Το Ιστορικό μου</a></li>
-                    <% } /* Τέλος if patient */ %>
-
+                    <% } %>
                     <li class="nav-item"><a class="nav-link btn btn-outline-danger btn-sm ms-lg-3 px-3 text-white" href="/">Έξοδος</a></li>
                 </ul>
             </div>
@@ -44,32 +55,45 @@
     </nav>
 
     <div class="container mt-4">
-        <div class="table-container shadow-sm">
-            <h2 class="mb-4 text-primary fw-bold">Ιατρικό Προσωπικό</h2>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Όνομα</th>
-                            <th>Επώνυμο</th>
-                            <th>Ειδικότητα</th>
-                            <th>Βαθμίδα</th>
-                            <th>Αρ. Αδείας</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% doctors.forEach(doc => { /* Έναρξη forEach γιατρών */ %>
-                            <tr>
-                                <td class="fw-bold"><%= doc.name %></td>
-                                <td><%= doc.surname %></td>
-                                <td><span class="badge bg-info text-dark"><%= doc.specialty %></span></td>
-                                <td><%= doc.rank %></td>
-                                <td><code><%= doc.medical_license_no %></code></td>
-                            </tr>
-                        <% }); /* Τέλος doctors.forEach */ %>
-                    </tbody>
-                </table>
-            </div>
+        <h2 class="mb-4 text-primary fw-bold"><i class="bi bi-people me-2"></i>Ιατρικό Προσωπικό</h2>
+
+        <div class="row g-4">
+            <% doctors.forEach(doc => { %>
+                <%
+                    const femaleEndings = ['α', 'η', 'ώ', 'ού', 'ία', 'ίνα', 'ένη', 'άνα'];
+                    const isFemale = femaleEndings.some(e => doc.name.endsWith(e));
+
+                    const malePhotos = [
+                        'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=800',
+                        'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=800',
+                        'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=800',
+                        'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=800',
+                        'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=800'
+                    ];
+                    const femalePhotos = [
+                        'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800',
+                        'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=800',
+                        'https://images.unsplash.com/photo-1651008376811-b90baee60c1f?w=800',
+                        'https://images.unsplash.com/photo-1638202993928-7267aad84c31?w=800',
+                        'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800'
+                    ];
+
+                    const pool = isFemale ? femalePhotos : malePhotos;
+                    const idx = parseInt(doc.medical_license_no.replace(/\D/g, '')) % pool.length;
+                    const photoUrl = pool[idx];
+                %>
+                <div class="col-sm-6 col-md-4 col-lg-3">
+                    <div class="doctor-card">
+                        <img src="<%= photoUrl %>" alt="<%= doc.name %> <%= doc.surname %>" class="doctor-photo">
+                        <div class="p-3">
+                            <h6 class="fw-bold mb-1"><%= doc.name %> <%= doc.surname %></h6>
+                            <span class="badge bg-info text-dark mb-2"><%= doc.specialty %></span>
+                            <div class="small text-muted"><%= doc.rank %></div>
+                            <div class="small"><code><%= doc.medical_license_no %></code></div>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
         </div>
     </div>
 
